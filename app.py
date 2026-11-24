@@ -82,28 +82,46 @@ def upload_file_to_cloud(file, folder="bloghub", prefix="img", default_url=None)
     if not allowed_avatar_file(file.filename):
         return default_url
 
-    if is_cloudinary_ready:
+    # Check Cloudinary at runtime so dynamic environment variables are always loaded
+    cloud_name = os.getenv("CLOUDINARY_CLOUD_NAME")
+    api_key = os.getenv("CLOUDINARY_API_KEY")
+    api_secret = os.getenv("CLOUDINARY_API_SECRET")
+
+    if cloud_name and api_key and api_secret:
         try:
+            cloudinary.config(
+                cloud_name=cloud_name,
+                api_key=api_key,
+                api_secret=api_secret,
+                secure=True
+            )
             file.seek(0)
             res = cloudinary.uploader.upload(
                 file,
                 folder=folder,
                 resource_type="image"
             )
-            return res.get("secure_url", default_url)
+            secure_url = res.get("secure_url")
+            if secure_url:
+                print(f"[*] Cloudinary upload successful: {secure_url}")
+                return secure_url
         except Exception as e:
             print(f"[!] Cloudinary upload error: {e}. Falling back to local storage.")
 
     # Local fallback
-    ext = file.filename.rsplit(".", 1)[1].lower()
-    safe_prefix = secure_filename(prefix).lower() or "file"
-    filename = f"{safe_prefix}_{int(datetime.now().timestamp())}.{ext}"
-    target_dir = os.path.join(app.config["UPLOAD_FOLDER"], folder.replace("/", "_"))
-    os.makedirs(target_dir, exist_ok=True)
-    file_path = os.path.join(target_dir, filename)
-    file.seek(0)
-    file.save(file_path)
-    return f"/static/uploads/{folder.replace('/', '_')}/{filename}"
+    try:
+        ext = file.filename.rsplit(".", 1)[1].lower()
+        safe_prefix = secure_filename(prefix).lower() or "file"
+        filename = f"{safe_prefix}_{int(datetime.now().timestamp())}.{ext}"
+        target_dir = os.path.join(app.config["UPLOAD_FOLDER"], folder.replace("/", "_"))
+        os.makedirs(target_dir, exist_ok=True)
+        file_path = os.path.join(target_dir, filename)
+        file.seek(0)
+        file.save(file_path)
+        return f"/static/uploads/{folder.replace('/', '_')}/{filename}"
+    except Exception as e:
+        print(f"[!] Local save error: {e}")
+        return default_url
 
 # --- Custom Template Filters & Helpers ---
 @app.template_filter("time_ago")
@@ -141,11 +159,26 @@ def reading_time(content):
 
 @app.context_processor
 def inject_global_data():
+    current_u = session.get("user")
+    if current_u and isinstance(current_u, dict):
+        try:
+            fresh_u = db.users.find_one({"username": current_u.get("username")})
+            if fresh_u:
+                current_u = {
+                    "id": str(fresh_u["_id"]),
+                    "name": fresh_u.get("name", current_u.get("name")),
+                    "username": fresh_u.get("username", current_u.get("username")),
+                    "email": fresh_u.get("email", current_u.get("email")),
+                    "avatar": fresh_u.get("avatar") or f"https://api.dicebear.com/7.x/bottts/svg?seed={fresh_u.get('username')}"
+                }
+                session["user"] = current_u
+        except Exception:
+            pass
     return {
         "categories": CATEGORIES,
         "is_mock_db": is_mock_db,
         "current_year": datetime.now().year,
-        "current_user": session.get("user")
+        "current_user": current_u
     }
 
 # --- Authentication Decorator ---
@@ -576,10 +609,13 @@ def update_profile():
             prefix=username,
             default_url=session["user"].get("avatar")
         )
-        update_fields["avatar"] = new_avatar
-        session["user"]["avatar"] = new_avatar
+        if new_avatar:
+            update_fields["avatar"] = new_avatar
+            session["user"]["avatar"] = new_avatar
+            session.modified = True
 
     session["user"]["name"] = name
+    session.modified = True
     db.users.update_one({"username": username}, {"$set": update_fields})
 
     # Update author name/avatar across user's blog posts

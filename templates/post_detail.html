@@ -18,7 +18,7 @@
         <div class="post-author-bar">
             <div class="author-left">
                 <a href="{{ url_for('profile', username=post.author_username) }}">
-                    <img src="{{ author.avatar if author and author.avatar else 'https://api.dicebear.com/7.x/initials/svg?seed=' + post.author_name }}" alt="{{ post.author_name }}" class="author-avatar-large">
+                    <img src="{{ author.avatar if author and author.avatar else 'https://api.dicebear.com/7.x/initials/svg?seed=' + post.author_name }}" alt="{{ post.author_name }}" class="author-avatar-large" onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/bottts/svg?seed={{ post.author_username }}';">
                 </a>
                 <div class="author-details">
                     <div class="author-name-row">

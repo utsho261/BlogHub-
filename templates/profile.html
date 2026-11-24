@@ -11,7 +11,8 @@
             <!-- Avatar with optional Edit Camera Trigger -->
             <div class="profile-avatar-wrapper">
                 <img src="{{ profile_user.avatar if profile_user.avatar else 'https://api.dicebear.com/7.x/initials/svg?seed=' + profile_user.name }}" 
-                     alt="{{ profile_user.name }}" class="profile-page-avatar" id="profilePageAvatarImg">
+                     alt="{{ profile_user.name }}" class="profile-page-avatar" id="profilePageAvatarImg"
+                     onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/bottts/svg?seed={{ profile_user.username }}';">
                 {% if current_user and current_user.username == profile_user.username %}
                 <button type="button" class="avatar-edit-badge-btn" onclick="openProfileEditModal()" title="Change Profile Picture">
                     <i class="fa-solid fa-camera"></i>
@@ -154,7 +155,7 @@
                 <div class="avatar-selection-layout">
                     <!-- Live Preview -->
                     <div class="avatar-preview-wrapper">
-                        <img id="editAvatarLivePreview" src="{{ profile_user.avatar if profile_user.avatar else 'https://api.dicebear.com/7.x/initials/svg?seed=' + profile_user.name }}" alt="Avatar preview" class="avatar-preview-circle">
+                        <img id="editAvatarLivePreview" src="{{ profile_user.avatar if profile_user.avatar else 'https://api.dicebear.com/7.x/initials/svg?seed=' + profile_user.name }}" alt="Avatar preview" class="avatar-preview-circle" onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/bottts/svg?seed={{ profile_user.username }}';">
                     </div>
 
                     <div class="avatar-inputs-container">

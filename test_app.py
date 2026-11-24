@@ -158,30 +158,43 @@ class BlogHubTestCase(unittest.TestCase):
         self.assertIn(b"Your comment has been posted!", res_comment.data)
 
     def test_07_profile_avatar_update(self):
-        """Test updating profile avatar via device file upload"""
+        """Test updating profile avatar via device file upload without touching real users"""
         import io
+        from werkzeug.security import generate_password_hash
 
-        # 1. Login
+        # 1. Setup isolated test user
+        db.users.delete_one({"username": "test_avatar_user"})
+        test_pw = "BlogHub@2026"
+        db.users.insert_one({
+            "name": "Avatar Tester",
+            "username": "test_avatar_user",
+            "email": "avatar_tester@test.local",
+            "password": generate_password_hash(test_pw),
+            "avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=AvatarTester"
+        })
+
         self.client.post("/login", data={
-            "identifier": "utsho_roy",
-            "password": "BlogHub@2026"
+            "identifier": "test_avatar_user",
+            "password": test_pw
         })
 
         # 2. Update via File Upload
         fake_image = (io.BytesIO(b"fake-image-bytes-data-new"), "avatar_test.png")
         res_file = self.client.post("/profile/update", data={
-            "name": "Utsho Roy",
+            "name": "Avatar Tester",
             "bio": "Bio with uploaded file avatar.",
             "avatar_file": fake_image
         }, content_type="multipart/form-data", follow_redirects=True)
         self.assertEqual(res_file.status_code, 200)
         self.assertIn(b"Your profile and avatar have been updated!", res_file.data)
 
-        updated_user_file = db.users.find_one({"username": "utsho_roy"})
+        updated_user_file = db.users.find_one({"username": "test_avatar_user"})
         self.assertTrue(
             updated_user_file["avatar"].startswith("/static/uploads/") or
             "cloudinary" in updated_user_file["avatar"]
         )
+        # Clean up isolated test user
+        db.users.delete_one({"username": "test_avatar_user"})
 
     def test_08_author_can_delete_own_post(self):
         """Test author can delete their own post and unauthorized user cannot"""
