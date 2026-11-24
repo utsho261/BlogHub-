@@ -7,6 +7,10 @@ class BlogHubTestCase(unittest.TestCase):
         self.app = app
         self.app.config["TESTING"] = True
         self.client = self.app.test_client()
+        # Clean up test accounts to ensure predictable test runs
+        db.users.delete_many({"username": {"$in": ["achol_cse", "test_user_1", "test_user_2", "brand_new_user_99"]}})
+        # Reset post likes array
+        db.posts.update_many({}, {"$set": {"likes": []}})
 
     def test_01_homepage_loads(self):
         """Test home page renders successfully with seeded posts"""
@@ -150,6 +154,43 @@ class BlogHubTestCase(unittest.TestCase):
             "comment": "Outstanding technical architecture and clear explanations!"
         }, follow_redirects=True)
         self.assertIn(b"Your comment has been posted!", res_comment.data)
+
+    def test_07_profile_avatar_update(self):
+        """Test updating profile avatar via file upload and web URL"""
+        import io
+
+        # 1. Login
+        self.client.post("/login", data={
+            "identifier": "utsho_roy",
+            "password": "BlogHub@2026"
+        })
+
+        # 2. Update via Web URL
+        res_url = self.client.post("/profile/update", data={
+            "name": "Utsho Roy Updated",
+            "bio": "Updated bio text for test.",
+            "avatar_choice": "url",
+            "avatar_url": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&q=80"
+        }, follow_redirects=True)
+        self.assertEqual(res_url.status_code, 200)
+        self.assertIn(b"Your profile and avatar have been updated!", res_url.data)
+
+        updated_user = db.users.find_one({"username": "utsho_roy"})
+        self.assertIn("unsplash.com", updated_user["avatar"])
+
+        # 3. Update via File Upload
+        fake_image = (io.BytesIO(b"fake-image-bytes-data"), "test_avatar.png")
+        res_file = self.client.post("/profile/update", data={
+            "name": "Utsho Roy",
+            "bio": "Bio with uploaded file avatar.",
+            "avatar_choice": "file",
+            "avatar_file": fake_image
+        }, content_type="multipart/form-data", follow_redirects=True)
+        self.assertEqual(res_file.status_code, 200)
+        self.assertIn(b"Your profile and avatar have been updated!", res_file.data)
+
+        updated_user_file = db.users.find_one({"username": "utsho_roy"})
+        self.assertTrue(updated_user_file["avatar"].startswith("/static/uploads/avatars/"))
 
 if __name__ == "__main__":
     unittest.main()

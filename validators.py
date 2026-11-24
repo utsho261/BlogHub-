@@ -11,6 +11,22 @@ CATEGORIES = [
     "Career & Lifestyle"
 ]
 
+ALLOWED_AVATAR_EXTENSIONS = {"png", "jpg", "jpeg", "webp", "gif"}
+
+def allowed_avatar_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_AVATAR_EXTENSIONS
+
+def validate_avatar_url(url):
+    if not url:
+        return True, ""
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme in ["http", "https"] and parsed.netloc:
+            return True, ""
+        return False, "Avatar URL must start with http:// or https://"
+    except Exception:
+        return False, "Invalid image URL format."
+
 def sanitize_text(text):
     """Strip leading/trailing whitespace and normalize spaces"""
     if not text:

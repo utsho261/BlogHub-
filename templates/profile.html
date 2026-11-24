@@ -8,9 +8,15 @@
     <div class="profile-header-card">
         <div class="profile-banner-accent"></div>
         <div class="profile-main-info">
+            <!-- Avatar with optional Edit Camera Trigger -->
             <div class="profile-avatar-wrapper">
                 <img src="{{ profile_user.avatar if profile_user.avatar else 'https://api.dicebear.com/7.x/initials/svg?seed=' + profile_user.name }}" 
-                     alt="{{ profile_user.name }}" class="profile-page-avatar">
+                     alt="{{ profile_user.name }}" class="profile-page-avatar" id="profilePageAvatarImg">
+                {% if current_user and current_user.username == profile_user.username %}
+                <button type="button" class="avatar-edit-badge-btn" onclick="openProfileEditModal()" title="Change Profile Picture">
+                    <i class="fa-solid fa-camera"></i>
+                </button>
+                {% endif %}
             </div>
 
             <div class="profile-texts">
@@ -18,6 +24,12 @@
                     <h1 class="profile-full-name">{{ profile_user.name }}</h1>
                     <span class="profile-handle">@{{ profile_user.username }}</span>
                     <span class="profile-role-badge"><i class="fa-solid fa-award"></i> {{ profile_user.role if profile_user.role else 'Author' }}</span>
+                    
+                    {% if current_user and current_user.username == profile_user.username %}
+                    <button type="button" class="btn btn-outline btn-sm edit-profile-btn" onclick="openProfileEditModal()">
+                        <i class="fa-solid fa-pen"></i> Edit Profile
+                    </button>
+                    {% endif %}
                 </div>
 
                 <p class="profile-bio-text">
@@ -115,4 +127,91 @@
         {% endif %}
     </div>
 </div>
+
+<!-- Edit Profile & Avatar Modal -->
+{% if current_user and current_user.username == profile_user.username %}
+<div class="modal-backdrop" id="profileEditModal">
+    <div class="modal-card modal-card-wide">
+        <div class="modal-header-row">
+            <h3 class="modal-title"><i class="fa-solid fa-user-pen text-primary"></i> Edit Profile & Avatar</h3>
+            <button type="button" class="modal-close-icon" onclick="closeProfileEditModal()">&times;</button>
+        </div>
+
+        <form action="{{ url_for('update_profile') }}" method="POST" enctype="multipart/form-data" class="modern-form" id="profileUpdateForm">
+            <!-- Full Name -->
+            <div class="form-group">
+                <label for="editProfileName" class="form-label">Full Name <span class="required">*</span></label>
+                <input type="text" id="editProfileName" name="name" class="form-control" value="{{ profile_user.name }}" required minlength="2" maxlength="60">
+            </div>
+
+            <!-- Avatar Section (File Upload OR URL) -->
+            <div class="avatar-selection-card">
+                <label class="form-label">Profile Picture (File Upload or Web URL)</label>
+                
+                <div class="avatar-selection-layout">
+                    <!-- Live Preview -->
+                    <div class="avatar-preview-wrapper">
+                        <img id="editAvatarLivePreview" src="{{ profile_user.avatar if profile_user.avatar else 'https://api.dicebear.com/7.x/initials/svg?seed=' + profile_user.name }}" alt="Avatar preview" class="avatar-preview-circle">
+                    </div>
+
+                    <div class="avatar-inputs-container">
+                        <!-- Mode Tabs -->
+                        <div class="avatar-mode-tabs">
+                            <label class="avatar-tab-option">
+                                <input type="radio" name="avatar_choice" value="current" checked onchange="switchEditAvatarMode('current')">
+                                <span><i class="fa-solid fa-check"></i> Current</span>
+                            </label>
+                            <label class="avatar-tab-option">
+                                <input type="radio" name="avatar_choice" value="file" onchange="switchEditAvatarMode('file')">
+                                <span><i class="fa-solid fa-cloud-arrow-up"></i> Upload File</span>
+                            </label>
+                            <label class="avatar-tab-option">
+                                <input type="radio" name="avatar_choice" value="url" onchange="switchEditAvatarMode('url')">
+                                <span><i class="fa-solid fa-link"></i> Web URL</span>
+                            </label>
+                        </div>
+
+                        <!-- Mode 1: File Upload -->
+                        <div id="editAvatarFileSection" class="avatar-mode-pane" style="display: none;">
+                            <label for="editAvatarFileInput" class="file-upload-box">
+                                <i class="fa-solid fa-image file-upload-icon"></i>
+                                <span class="file-upload-text" id="editFileLabel">Select image file from computer (JPG, PNG, WEBP, max 5MB)</span>
+                                <input type="file" id="editAvatarFileInput" name="avatar_file" accept="image/png, image/jpeg, image/jpg, image/webp, image/gif" style="display: none;">
+                            </label>
+                        </div>
+
+                        <!-- Mode 2: URL Input -->
+                        <div id="editAvatarUrlSection" class="avatar-mode-pane" style="display: none;">
+                            <div class="input-icon-wrapper">
+                                <i class="fa-solid fa-link input-leading-icon"></i>
+                                <input type="url" id="editAvatarUrlInput" name="avatar_url" class="form-control" placeholder="https://images.unsplash.com/photo-...">
+                            </div>
+                        </div>
+
+                        <!-- Mode 0: Keep current -->
+                        <div id="editAvatarCurrentSection" class="avatar-mode-pane">
+                            <span class="helper-text">Currently using existing profile avatar. Select Upload File or Web URL to change.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bio -->
+            <div class="form-group">
+                <div class="field-label-row">
+                    <label for="editProfileBio" class="form-label">Bio</label>
+                    <span class="char-counter" id="editBioCounter">{{ (profile_user.bio or '')|length }} / 300</span>
+                </div>
+                <textarea id="editProfileBio" name="bio" class="form-control" rows="3" maxlength="300">{{ profile_user.bio or '' }}</textarea>
+            </div>
+
+            <!-- Modal Actions -->
+            <div class="modal-actions-right">
+                <button type="button" class="btn btn-ghost" onclick="closeProfileEditModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Profile</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
 {% endblock %}

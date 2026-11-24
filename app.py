@@ -1,4 +1,5 @@
 import math
+import os
 import re
 from datetime import datetime
 from functools import wraps
@@ -8,18 +9,57 @@ from flask import (
     flash, session, jsonify, abort
 )
 from werkzeug.security import generate_password_hash
+from werkzeug.utils import secure_filename
 
 from config import get_db, SECRET_KEY, PORT, DEBUG
 from validators import (
     validate_registration, validate_login, validate_post,
-    validate_comment, CATEGORIES
+    validate_comment, allowed_avatar_file, validate_avatar_url,
+    CATEGORIES
 )
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
+# Configure Avatar Uploads
+UPLOAD_FOLDER = os.path.join(app.root_path, "static", "uploads", "avatars")
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # 5 MB max file upload size
+
 # Initialize MongoDB connection
 db, is_mock_db = get_db()
+
+def process_avatar_input(username, fallback_name=""):
+    """
+    Checks request.files for 'avatar_file' or request.form for 'avatar_url'.
+    Returns (avatar_url_or_path, error_message)
+    """
+    avatar_choice = request.form.get("avatar_choice", "")
+    
+    # 1. File Upload
+    file = request.files.get("avatar_file")
+    if file and file.filename:
+        if not allowed_avatar_file(file.filename):
+            return None, "Allowed file formats: PNG, JPG, JPEG, WEBP, GIF."
+        ext = file.filename.rsplit(".", 1)[1].lower()
+        safe_user = secure_filename(username).lower() or "user"
+        filename = f"{safe_user}_{int(datetime.now().timestamp())}.{ext}"
+        file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+        file.save(file_path)
+        return f"/static/uploads/avatars/{filename}", None
+
+    # 2. URL Input
+    avatar_url = request.form.get("avatar_url", "").strip()
+    if avatar_url:
+        valid, err = validate_avatar_url(avatar_url)
+        if not valid:
+            return None, err
+        return avatar_url, None
+
+    # 3. Default avatar
+    name_for_seed = fallback_name or username
+    return f"https://api.dicebear.com/7.x/initials/svg?seed={name_for_seed}", None
 
 # --- Custom Template Filters & Helpers ---
 @app.template_filter("time_ago")
@@ -137,13 +177,18 @@ def register():
         is_valid, errors, cleaned = validate_registration(form_data, db)
 
         if is_valid:
+            avatar, avatar_err = process_avatar_input(cleaned["username"], fallback_name=cleaned["name"])
+            if avatar_err:
+                flash(avatar_err, "danger")
+                return render_template("register.html", errors=errors, form_data=form_data)
+
             new_user = {
                 "name": cleaned["name"],
                 "username": cleaned["username"],
                 "email": cleaned["email"],
                 "password": generate_password_hash(cleaned["password"]),
                 "bio": cleaned["bio"],
-                "avatar": f"https://api.dicebear.com/7.x/initials/svg?seed={cleaned['name']}",
+                "avatar": avatar,
                 "role": "Writer",
                 "created_at": datetime.now()
             }
@@ -428,6 +473,49 @@ def profile(username):
         total_views=total_views,
         total_likes=total_likes
     )
+
+@app.route("/profile/update", methods=["POST"])
+@login_required
+def update_profile():
+    current_user = session["user"]
+    username = current_user["username"]
+
+    name = request.form.get("name", "").strip()
+    bio = request.form.get("bio", "").strip()
+
+    if not name or len(name) < 2 or len(name) > 60:
+        flash("Name must be between 2 and 60 characters.", "danger")
+        return redirect(url_for("profile", username=username))
+
+    if len(bio) > 300:
+        flash("Bio cannot exceed 300 characters.", "danger")
+        return redirect(url_for("profile", username=username))
+
+    update_fields = {"name": name, "bio": bio}
+
+    avatar_choice = request.form.get("avatar_choice", "")
+    has_file = "avatar_file" in request.files and bool(request.files["avatar_file"].filename)
+    has_url = bool(request.form.get("avatar_url", "").strip())
+
+    if avatar_choice in ["file", "url"] or has_file or has_url:
+        new_avatar, avatar_err = process_avatar_input(username, fallback_name=name)
+        if avatar_err:
+            flash(avatar_err, "danger")
+            return redirect(url_for("profile", username=username))
+        update_fields["avatar"] = new_avatar
+        session["user"]["avatar"] = new_avatar
+
+    session["user"]["name"] = name
+    db.users.update_one({"username": username}, {"$set": update_fields})
+
+    # Update author name/avatar across user's blog posts
+    post_updates = {"author_name": name}
+    if "avatar" in update_fields:
+        post_updates["author_avatar"] = update_fields["avatar"]
+    db.posts.update_many({"author_username": username}, {"$set": post_updates})
+
+    flash("Your profile and avatar have been updated!", "success")
+    return redirect(url_for("profile", username=username))
 
 # --- Real-Time Validation API Endpoints ---
 @app.route("/api/validate/username")

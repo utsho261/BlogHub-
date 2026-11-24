@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initPostEditor();
     initLikeToggle();
     initCommentForm();
+    initAvatarInputs();
 });
 
 /* ==========================================================================
@@ -668,4 +669,122 @@ function openDeleteModal(postId) {
 function closeDeleteModal() {
     const backdrop = document.getElementById('deleteModalBackdrop');
     if (backdrop) backdrop.classList.remove('show');
+}
+
+/* ==========================================================================
+   Avatar Upload & Live Preview (File and URL)
+   ========================================================================== */
+function initAvatarInputs() {
+    // 1. Registration form avatar
+    const regFileInput = document.getElementById('regAvatarFile');
+    const regUrlInput = document.getElementById('regAvatarUrl');
+    const regLivePreview = document.getElementById('avatarLivePreview');
+    const regFileLabel = document.getElementById('fileUploadLabel');
+    const regNameInput = document.getElementById('regName');
+
+    if (regNameInput && regLivePreview) {
+        regNameInput.addEventListener('input', () => {
+            const currentChoice = document.querySelector('input[name="avatar_choice"]:checked')?.value;
+            if (currentChoice === 'default' && regNameInput.value.trim()) {
+                regLivePreview.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(regNameInput.value.trim())}`;
+            }
+        });
+    }
+
+    if (regFileInput && regLivePreview) {
+        regFileInput.addEventListener('change', () => {
+            if (regFileInput.files && regFileInput.files[0]) {
+                const file = regFileInput.files[0];
+                if (regFileLabel) regFileLabel.textContent = file.name;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    regLivePreview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    if (regUrlInput && regLivePreview) {
+        regUrlInput.addEventListener('input', () => {
+            const url = regUrlInput.value.trim();
+            if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+                regLivePreview.src = url;
+            }
+        });
+    }
+
+    // 2. Profile Edit Modal avatar
+    const editFileInput = document.getElementById('editAvatarFileInput');
+    const editUrlInput = document.getElementById('editAvatarUrlInput');
+    const editLivePreview = document.getElementById('editAvatarLivePreview');
+    const editFileLabel = document.getElementById('editFileLabel');
+    const editBio = document.getElementById('editProfileBio');
+    const editBioCounter = document.getElementById('editBioCounter');
+
+    if (editBio && editBioCounter) {
+        editBio.addEventListener('input', () => {
+            editBioCounter.textContent = `${editBio.value.length} / 300`;
+        });
+    }
+
+    if (editFileInput && editLivePreview) {
+        editFileInput.addEventListener('change', () => {
+            if (editFileInput.files && editFileInput.files[0]) {
+                const file = editFileInput.files[0];
+                if (editFileLabel) editFileLabel.textContent = file.name;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    editLivePreview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    if (editUrlInput && editLivePreview) {
+        editUrlInput.addEventListener('input', () => {
+            const url = editUrlInput.value.trim();
+            if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+                editLivePreview.src = url;
+            }
+        });
+    }
+}
+
+function switchAvatarMode(mode) {
+    const fileSec = document.getElementById('avatarFileSection');
+    const urlSec = document.getElementById('avatarUrlSection');
+    const defSec = document.getElementById('avatarDefaultSection');
+    const preview = document.getElementById('avatarLivePreview');
+    const nameInput = document.getElementById('regName');
+
+    if (fileSec) fileSec.style.display = mode === 'file' ? 'block' : 'none';
+    if (urlSec) urlSec.style.display = mode === 'url' ? 'block' : 'none';
+    if (defSec) defSec.style.display = mode === 'default' ? 'block' : 'none';
+
+    if (mode === 'default' && preview) {
+        const seed = nameInput && nameInput.value.trim() ? nameInput.value.trim() : 'User';
+        preview.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(seed)}`;
+    }
+}
+
+function switchEditAvatarMode(mode) {
+    const fileSec = document.getElementById('editAvatarFileSection');
+    const urlSec = document.getElementById('editAvatarUrlSection');
+    const curSec = document.getElementById('editAvatarCurrentSection');
+
+    if (fileSec) fileSec.style.display = mode === 'file' ? 'block' : 'none';
+    if (urlSec) urlSec.style.display = mode === 'url' ? 'block' : 'none';
+    if (curSec) curSec.style.display = mode === 'current' ? 'block' : 'none';
+}
+
+function openProfileEditModal() {
+    const modal = document.getElementById('profileEditModal');
+    if (modal) modal.classList.add('show');
+}
+
+function closeProfileEditModal() {
+    const modal = document.getElementById('profileEditModal');
+    if (modal) modal.classList.remove('show');
 }

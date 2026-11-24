@@ -2183,6 +2183,184 @@ img {
 }
 
 /* ==========================================================================
+   Avatar Upload & Selection UI
+   ========================================================================== */
+.profile-avatar-wrapper {
+    position: relative;
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    border: 4px solid var(--bg-surface);
+    background: #000;
+    flex-shrink: 0;
+}
+
+.avatar-edit-badge-btn {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 34px;
+    height: 34px;
+    background: var(--primary);
+    color: #fff;
+    border: 2px solid var(--bg-surface);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.85rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    transition: all var(--transition-fast);
+}
+
+.avatar-edit-badge-btn:hover {
+    background: var(--primary-hover);
+    transform: scale(1.1);
+}
+
+.edit-profile-btn {
+    margin-left: 0.5rem;
+}
+
+.avatar-selection-card {
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    margin: 0.5rem 0;
+}
+
+.avatar-selection-layout {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin-top: 0.75rem;
+}
+
+.avatar-preview-wrapper {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    border: 2px solid var(--primary);
+    overflow: hidden;
+    flex-shrink: 0;
+    background: #1e293b;
+}
+
+.avatar-preview-circle {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-inputs-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.avatar-mode-tabs {
+    display: inline-flex;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    padding: 0.2rem;
+    border-radius: var(--radius-pill);
+    gap: 0.25rem;
+    width: fit-content;
+}
+
+.avatar-tab-option {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.avatar-tab-option input[type="radio"] {
+    display: none;
+}
+
+.avatar-tab-option span {
+    padding: 0.35rem 0.85rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    border-radius: var(--radius-pill);
+    transition: all var(--transition-fast);
+}
+
+.avatar-tab-option input[type="radio"]:checked + span {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 1px 6px rgba(99, 102, 241, 0.4);
+}
+
+.file-upload-box {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border: 1px dashed var(--border-hover);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.02);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.file-upload-box:hover {
+    border-color: var(--primary);
+    background: rgba(99, 102, 241, 0.05);
+}
+
+.file-upload-icon {
+    font-size: 1.25rem;
+    color: var(--primary);
+}
+
+.file-upload-text {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    word-break: break-all;
+}
+
+.modal-card-wide {
+    max-width: 580px;
+    text-align: left;
+}
+
+.modal-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.modal-close-icon {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    line-height: 1;
+}
+
+.modal-close-icon:hover {
+    color: var(--text-primary);
+}
+
+.modal-actions-right {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-subtle);
+}
+
+/* ==========================================================================
    Animations & Responsive Breakpoints
    ========================================================================== */
 @keyframes fadeIn {

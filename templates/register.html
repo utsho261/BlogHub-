@@ -14,8 +14,8 @@
             <p class="auth-subtitle">Create your free author account with instant publishing capabilities.</p>
         </div>
 
-        <!-- Registration Form with Real-Time Multi-Rule Validation -->
-        <form action="{{ url_for('register') }}" method="POST" id="registerForm" class="modern-form" novalidate>
+        <!-- Registration Form with Real-Time Multi-Rule Validation and File/URL Avatar -->
+        <form action="{{ url_for('register') }}" method="POST" id="registerForm" class="modern-form" enctype="multipart/form-data" novalidate>
             
             <div class="form-row-2">
                 <!-- Full Name -->
@@ -122,6 +122,62 @@
                 <div class="check-item" id="checkLower"><i class="fa-regular fa-circle"></i> One lowercase letter (a-z)</div>
                 <div class="check-item" id="checkNum"><i class="fa-regular fa-circle"></i> One number (0-9)</div>
                 <div class="check-item" id="checkSpec"><i class="fa-regular fa-circle"></i> One special character (!@#$%)</div>
+            </div>
+
+            <!-- Profile Picture Section (URL or File Upload) -->
+            <div class="avatar-selection-card">
+                <div class="field-label-row">
+                    <label class="form-label"><i class="fa-regular fa-image text-primary"></i> Profile Picture <span class="optional">(Optional)</span></label>
+                    <span class="helper-text">File upload or Web URL</span>
+                </div>
+
+                <div class="avatar-selection-layout">
+                    <!-- Live Avatar Preview Circle -->
+                    <div class="avatar-preview-wrapper">
+                        <img id="avatarLivePreview" src="https://api.dicebear.com/7.x/initials/svg?seed=User" alt="Avatar preview" class="avatar-preview-circle">
+                    </div>
+
+                    <!-- Options & Inputs -->
+                    <div class="avatar-inputs-container">
+                        <!-- Mode Selector Tabs -->
+                        <div class="avatar-mode-tabs">
+                            <label class="avatar-tab-option">
+                                <input type="radio" name="avatar_choice" value="default" checked onchange="switchAvatarMode('default')">
+                                <span><i class="fa-solid fa-wand-magic-sparkles"></i> Auto</span>
+                            </label>
+                            <label class="avatar-tab-option">
+                                <input type="radio" name="avatar_choice" value="file" onchange="switchAvatarMode('file')">
+                                <span><i class="fa-solid fa-cloud-arrow-up"></i> Upload File</span>
+                            </label>
+                            <label class="avatar-tab-option">
+                                <input type="radio" name="avatar_choice" value="url" onchange="switchAvatarMode('url')">
+                                <span><i class="fa-solid fa-link"></i> Image URL</span>
+                            </label>
+                        </div>
+
+                        <!-- Mode 1: File Upload Input -->
+                        <div id="avatarFileSection" class="avatar-mode-pane" style="display: none;">
+                            <label for="regAvatarFile" class="file-upload-box">
+                                <i class="fa-solid fa-camera file-upload-icon"></i>
+                                <span class="file-upload-text" id="fileUploadLabel">Choose image from device (PNG, JPG, WEBP, max 5MB)</span>
+                                <input type="file" id="regAvatarFile" name="avatar_file" accept="image/png, image/jpeg, image/jpg, image/webp, image/gif" style="display: none;">
+                            </label>
+                        </div>
+
+                        <!-- Mode 2: URL Input -->
+                        <div id="avatarUrlSection" class="avatar-mode-pane" style="display: none;">
+                            <div class="input-icon-wrapper">
+                                <i class="fa-solid fa-globe input-leading-icon"></i>
+                                <input type="url" id="regAvatarUrl" name="avatar_url" class="form-control" placeholder="https://example.com/my-photo.jpg">
+                            </div>
+                        </div>
+
+                        <!-- Mode 0: Auto message -->
+                        <div id="avatarDefaultSection" class="avatar-mode-pane">
+                            <span class="helper-text">An elegant initial avatar will be automatically created from your name.</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Short Bio / Intro -->
