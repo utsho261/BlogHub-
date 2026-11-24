@@ -189,16 +189,8 @@ def validate_post(data):
     elif len(summary) > 300:
         errors["summary"] = "Summary cannot exceed 300 characters."
 
-    # 5. Cover Image URL
-    if cover_image:
-        try:
-            parsed = urlparse(cover_image)
-            if not (parsed.scheme in ["http", "https"] and parsed.netloc):
-                errors["cover_image"] = "Cover image must be a valid HTTP or HTTPS URL."
-        except Exception:
-            errors["cover_image"] = "Invalid image URL format."
-    else:
-        # Default high-quality placeholder cover
+    # 5. Cover Image
+    if not cover_image:
         cover_image = "https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=1200&q=80"
 
     # 6. Tags (comma separated)

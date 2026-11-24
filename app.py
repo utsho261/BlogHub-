@@ -11,55 +11,78 @@ from flask import (
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
 
+import cloudinary
+import cloudinary.uploader
+
 from config import get_db, SECRET_KEY, PORT, DEBUG
 from validators import (
     validate_registration, validate_login, validate_post,
-    validate_comment, allowed_avatar_file, validate_avatar_url,
+    validate_comment, allowed_avatar_file,
     CATEGORIES
 )
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
-# Configure Avatar Uploads
-UPLOAD_FOLDER = os.path.join(app.root_path, "static", "uploads", "avatars")
+# Configure Local Uploads Fallback
+UPLOAD_FOLDER = os.path.join(app.root_path, "static", "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # 5 MB max file upload size
+app.config["MAX_CONTENT_LENGTH"] = 8 * 1024 * 1024  # 8 MB max file upload size
+
+# Configure Cloudinary CDN
+CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME")
+CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY")
+CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET")
+
+is_cloudinary_ready = bool(CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET)
+if is_cloudinary_ready:
+    cloudinary.config(
+        cloud_name=CLOUDINARY_CLOUD_NAME,
+        api_key=CLOUDINARY_API_KEY,
+        api_secret=CLOUDINARY_API_SECRET,
+        secure=True
+    )
+    print(f"[*] Cloudinary CDN active for cloud: {CLOUDINARY_CLOUD_NAME}")
+else:
+    print("[!] Cloudinary credentials missing in .env, falling back to local file storage.")
 
 # Initialize MongoDB connection
 db, is_mock_db = get_db()
 
-def process_avatar_input(username, fallback_name=""):
+def upload_file_to_cloud(file, folder="bloghub", prefix="img", default_url=None):
     """
-    Checks request.files for 'avatar_file' or request.form for 'avatar_url'.
-    Returns (avatar_url_or_path, error_message)
+    Directly uploads file from user PC/device to Cloudinary CDN.
+    Falls back to local storage if Cloudinary is not configured.
     """
-    avatar_choice = request.form.get("avatar_choice", "")
-    
-    # 1. File Upload
-    file = request.files.get("avatar_file")
-    if file and file.filename:
-        if not allowed_avatar_file(file.filename):
-            return None, "Allowed file formats: PNG, JPG, JPEG, WEBP, GIF."
-        ext = file.filename.rsplit(".", 1)[1].lower()
-        safe_user = secure_filename(username).lower() or "user"
-        filename = f"{safe_user}_{int(datetime.now().timestamp())}.{ext}"
-        file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-        file.save(file_path)
-        return f"/static/uploads/avatars/{filename}", None
+    if not file or not file.filename:
+        return default_url
 
-    # 2. URL Input
-    avatar_url = request.form.get("avatar_url", "").strip()
-    if avatar_url:
-        valid, err = validate_avatar_url(avatar_url)
-        if not valid:
-            return None, err
-        return avatar_url, None
+    if not allowed_avatar_file(file.filename):
+        return default_url
 
-    # 3. Default avatar
-    name_for_seed = fallback_name or username
-    return f"https://api.dicebear.com/7.x/initials/svg?seed={name_for_seed}", None
+    if is_cloudinary_ready:
+        try:
+            file.seek(0)
+            res = cloudinary.uploader.upload(
+                file,
+                folder=folder,
+                resource_type="image"
+            )
+            return res.get("secure_url", default_url)
+        except Exception as e:
+            print(f"[!] Cloudinary upload error: {e}. Falling back to local storage.")
+
+    # Local fallback
+    ext = file.filename.rsplit(".", 1)[1].lower()
+    safe_prefix = secure_filename(prefix).lower() or "file"
+    filename = f"{safe_prefix}_{int(datetime.now().timestamp())}.{ext}"
+    target_dir = os.path.join(app.config["UPLOAD_FOLDER"], folder.replace("/", "_"))
+    os.makedirs(target_dir, exist_ok=True)
+    file_path = os.path.join(target_dir, filename)
+    file.seek(0)
+    file.save(file_path)
+    return f"/static/uploads/{folder.replace('/', '_')}/{filename}"
 
 # --- Custom Template Filters & Helpers ---
 @app.template_filter("time_ago")
@@ -177,10 +200,13 @@ def register():
         is_valid, errors, cleaned = validate_registration(form_data, db)
 
         if is_valid:
-            avatar, avatar_err = process_avatar_input(cleaned["username"], fallback_name=cleaned["name"])
-            if avatar_err:
-                flash(avatar_err, "danger")
-                return render_template("register.html", errors=errors, form_data=form_data)
+            avatar_file = request.files.get("avatar_file")
+            avatar_url = upload_file_to_cloud(
+                avatar_file,
+                folder="bloghub/avatars",
+                prefix=cleaned["username"],
+                default_url=f"https://api.dicebear.com/7.x/initials/svg?seed={cleaned['name']}"
+            )
 
             new_user = {
                 "name": cleaned["name"],
@@ -188,7 +214,7 @@ def register():
                 "email": cleaned["email"],
                 "password": generate_password_hash(cleaned["password"]),
                 "bio": cleaned["bio"],
-                "avatar": avatar,
+                "avatar": avatar_url,
                 "role": "Writer",
                 "created_at": datetime.now()
             }
@@ -293,12 +319,19 @@ def create_post():
 
         if is_valid:
             user = session["user"]
+            cover_file = request.files.get("cover_image")
+            cover_url = upload_file_to_cloud(
+                cover_file,
+                folder="bloghub/covers",
+                prefix="cover",
+                default_url="https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=1200&q=80"
+            )
             new_post = {
                 "title": cleaned["title"],
                 "category": cleaned["category"],
                 "summary": cleaned["summary"],
                 "content": cleaned["content"],
-                "cover_image": cleaned["cover_image"],
+                "cover_image": cover_url,
                 "tags": cleaned["tags"],
                 "author_id": ObjectId(user["id"]) if ObjectId.is_valid(user["id"]) else user["id"],
                 "author_name": user["name"],
@@ -350,6 +383,16 @@ def edit_post(post_id):
         is_valid, errors, cleaned = validate_post(form_data)
 
         if is_valid:
+            cover_file = request.files.get("cover_image")
+            cover_url = post.get("cover_image")
+            if cover_file and cover_file.filename:
+                cover_url = upload_file_to_cloud(
+                    cover_file,
+                    folder="bloghub/covers",
+                    prefix="cover",
+                    default_url=cover_url
+                )
+
             db.posts.update_one(
                 {"_id": obj_id},
                 {
@@ -358,7 +401,7 @@ def edit_post(post_id):
                         "category": cleaned["category"],
                         "summary": cleaned["summary"],
                         "content": cleaned["content"],
-                        "cover_image": cleaned["cover_image"],
+                        "cover_image": cover_url,
                         "tags": cleaned["tags"],
                         "updated_at": datetime.now()
                     }
@@ -493,15 +536,14 @@ def update_profile():
 
     update_fields = {"name": name, "bio": bio}
 
-    avatar_choice = request.form.get("avatar_choice", "")
-    has_file = "avatar_file" in request.files and bool(request.files["avatar_file"].filename)
-    has_url = bool(request.form.get("avatar_url", "").strip())
-
-    if avatar_choice in ["file", "url"] or has_file or has_url:
-        new_avatar, avatar_err = process_avatar_input(username, fallback_name=name)
-        if avatar_err:
-            flash(avatar_err, "danger")
-            return redirect(url_for("profile", username=username))
+    avatar_file = request.files.get("avatar_file")
+    if avatar_file and avatar_file.filename:
+        new_avatar = upload_file_to_cloud(
+            avatar_file,
+            folder="bloghub/avatars",
+            prefix=username,
+            default_url=session["user"].get("avatar")
+        )
         update_fields["avatar"] = new_avatar
         session["user"]["avatar"] = new_avatar
 

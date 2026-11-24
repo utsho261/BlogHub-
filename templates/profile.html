@@ -144,9 +144,9 @@
                 <input type="text" id="editProfileName" name="name" class="form-control" value="{{ profile_user.name }}" required minlength="2" maxlength="60">
             </div>
 
-            <!-- Avatar Section (File Upload OR URL) -->
+            <!-- Avatar Section (Direct File Upload from Device) -->
             <div class="avatar-selection-card">
-                <label class="form-label">Profile Picture (File Upload or Web URL)</label>
+                <label class="form-label">Profile Picture <span class="optional">(Choose file to update, or keep current)</span></label>
                 
                 <div class="avatar-selection-layout">
                     <!-- Live Preview -->
@@ -155,43 +155,12 @@
                     </div>
 
                     <div class="avatar-inputs-container">
-                        <!-- Mode Tabs -->
-                        <div class="avatar-mode-tabs">
-                            <label class="avatar-tab-option">
-                                <input type="radio" name="avatar_choice" value="current" checked onchange="switchEditAvatarMode('current')">
-                                <span><i class="fa-solid fa-check"></i> Current</span>
-                            </label>
-                            <label class="avatar-tab-option">
-                                <input type="radio" name="avatar_choice" value="file" onchange="switchEditAvatarMode('file')">
-                                <span><i class="fa-solid fa-cloud-arrow-up"></i> Upload File</span>
-                            </label>
-                            <label class="avatar-tab-option">
-                                <input type="radio" name="avatar_choice" value="url" onchange="switchEditAvatarMode('url')">
-                                <span><i class="fa-solid fa-link"></i> Web URL</span>
-                            </label>
-                        </div>
-
-                        <!-- Mode 1: File Upload -->
-                        <div id="editAvatarFileSection" class="avatar-mode-pane" style="display: none;">
-                            <label for="editAvatarFileInput" class="file-upload-box">
-                                <i class="fa-solid fa-image file-upload-icon"></i>
-                                <span class="file-upload-text" id="editFileLabel">Select image file from computer (JPG, PNG, WEBP, max 5MB)</span>
-                                <input type="file" id="editAvatarFileInput" name="avatar_file" accept="image/png, image/jpeg, image/jpg, image/webp, image/gif" style="display: none;">
-                            </label>
-                        </div>
-
-                        <!-- Mode 2: URL Input -->
-                        <div id="editAvatarUrlSection" class="avatar-mode-pane" style="display: none;">
-                            <div class="input-icon-wrapper">
-                                <i class="fa-solid fa-link input-leading-icon"></i>
-                                <input type="url" id="editAvatarUrlInput" name="avatar_url" class="form-control" placeholder="https://images.unsplash.com/photo-...">
-                            </div>
-                        </div>
-
-                        <!-- Mode 0: Keep current -->
-                        <div id="editAvatarCurrentSection" class="avatar-mode-pane">
-                            <span class="helper-text">Currently using existing profile avatar. Select Upload File or Web URL to change.</span>
-                        </div>
+                        <label for="editAvatarFileInput" class="file-upload-box">
+                            <i class="fa-solid fa-camera file-upload-icon"></i>
+                            <span class="file-upload-text" id="editFileLabel">Click to select new image from your device</span>
+                            <input type="file" id="editAvatarFileInput" name="avatar_file" accept="image/png, image/jpeg, image/jpg, image/webp, image/gif" style="display: none;">
+                        </label>
+                        <span class="helper-text">Leave unchanged to keep your current photo.</span>
                     </div>
                 </div>
             </div>

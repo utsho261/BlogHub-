@@ -19,7 +19,7 @@
         </div>
     </div>
 
-    <form action="{{ url_for('edit_post', post_id=post_id) }}" method="POST" id="postForm" class="modern-form" novalidate>
+    <form action="{{ url_for('edit_post', post_id=post_id) }}" method="POST" id="postForm" class="modern-form" enctype="multipart/form-data" novalidate>
         <div id="editPane">
             <!-- Title Field -->
             <div class="form-group {% if errors.title %}has-error{% endif %}">
@@ -64,22 +64,17 @@
                 </div>
             </div>
 
-            <!-- Cover Image URL -->
-            <div class="form-group {% if errors.cover_image %}has-error{% endif %}">
+            <!-- Cover Image File Upload from Device with Live Preview -->
+            <div class="form-group">
                 <div class="field-label-row">
-                    <label for="postCoverImage" class="form-label">Cover Image URL <span class="optional">(Optional)</span></label>
-                    <span class="helper-text">Direct Unsplash or web image link</span>
+                    <label for="postCoverFile" class="form-label">Cover Image <span class="optional">(Choose new image to change, or keep current)</span></label>
+                    <span class="helper-text">JPG, PNG, WEBP (Max 8MB)</span>
                 </div>
-                <div class="image-input-group">
-                    <input type="url" id="postCoverImage" name="cover_image" class="form-control {% if errors.cover_image %}is-invalid{% endif %}" 
-                           value="{{ form_data.get('cover_image', '') }}">
-                    <button type="button" class="btn btn-outline btn-sm" id="loadRandomCoverBtn" onclick="setPresetCover()">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i> Random Cover
-                    </button>
-                </div>
-                <div class="field-feedback {% if errors.cover_image %}show{% endif %}" id="coverFeedback">
-                    {{ errors.cover_image }}
-                </div>
+                <label for="postCoverFile" class="file-upload-box">
+                    <i class="fa-solid fa-cloud-arrow-up file-upload-icon"></i>
+                    <span class="file-upload-text" id="coverFileLabel">Select new image from device to replace cover</span>
+                    <input type="file" id="postCoverFile" name="cover_image" accept="image/png, image/jpeg, image/jpg, image/webp, image/gif" style="display: none;">
+                </label>
                 <div class="image-preview-box" id="imagePreviewBox">
                     <img id="imagePreviewImg" src="{{ form_data.get('cover_image', '') }}" alt="Cover preview">
                     <button type="button" class="remove-preview-btn" onclick="clearCoverPreview()">&times;</button>

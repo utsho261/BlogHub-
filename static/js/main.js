@@ -438,63 +438,43 @@ function initPostEditor() {
         });
     }
 
-    if (coverInput) {
-        coverInput.addEventListener('input', () => {
-            handleCoverPreview(coverInput.value.trim());
-            updateLivePreview();
-        });
-        if (coverInput.value.trim()) {
-            handleCoverPreview(coverInput.value.trim());
-        }
-    }
-}
-
-function handleCoverPreview(url) {
+    const coverFileInput = document.getElementById('postCoverFile');
+    const coverFileLabel = document.getElementById('coverFileLabel');
     const previewBox = document.getElementById('imagePreviewBox');
     const previewImg = document.getElementById('imagePreviewImg');
-    const feedback = document.getElementById('coverFeedback');
-    const coverInput = document.getElementById('postCoverImage');
 
-    if (!previewBox || !previewImg) return;
-
-    if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
-        previewImg.src = url;
-        previewBox.style.display = 'block';
-        previewImg.onerror = () => {
-            previewBox.style.display = 'none';
-            if (feedback && coverInput) setInvalid(coverInput, feedback, 'Image link could not be loaded.');
-        };
-        previewImg.onload = () => {
-            if (feedback && coverInput) setValid(coverInput, feedback);
-        };
-    } else {
-        previewBox.style.display = 'none';
+    if (coverFileInput) {
+        coverFileInput.addEventListener('change', () => {
+            if (coverFileInput.files && coverFileInput.files[0]) {
+                const file = coverFileInput.files[0];
+                if (coverFileLabel) coverFileLabel.textContent = file.name;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    if (previewImg) previewImg.src = e.target.result;
+                    if (previewBox) previewBox.style.display = 'block';
+                    const liveCoverBox = document.getElementById('previewCoverBox');
+                    const liveCoverImg = document.getElementById('previewCoverImg');
+                    if (liveCoverBox && liveCoverImg) {
+                        liveCoverBox.style.display = 'block';
+                        liveCoverImg.src = e.target.result;
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
     }
 }
 
 function clearCoverPreview() {
-    const coverInput = document.getElementById('postCoverImage');
+    const coverFileInput = document.getElementById('postCoverFile');
+    const coverFileLabel = document.getElementById('coverFileLabel');
     const previewBox = document.getElementById('imagePreviewBox');
-    if (coverInput) coverInput.value = '';
-    if (previewBox) previewBox.style.display = 'none';
-    updateLivePreview();
-}
+    const liveCoverBox = document.getElementById('previewCoverBox');
 
-function setPresetCover() {
-    const presets = [
-        'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80',
-        'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1200&q=80',
-        'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80',
-        'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1200&q=80',
-        'https://images.unsplash.com/photo-1504639725590-34d0984388bd?auto=format&fit=crop&w=1200&q=80'
-    ];
-    const randomUrl = presets[Math.floor(Math.random() * presets.length)];
-    const coverInput = document.getElementById('postCoverImage');
-    if (coverInput) {
-        coverInput.value = randomUrl;
-        handleCoverPreview(randomUrl);
-        updateLivePreview();
-    }
+    if (coverFileInput) coverFileInput.value = '';
+    if (coverFileLabel) coverFileLabel.textContent = 'Click or drop image to upload from your computer';
+    if (previewBox) previewBox.style.display = 'none';
+    if (liveCoverBox) liveCoverBox.style.display = 'none';
 }
 
 function switchEditorTab(tab) {
@@ -672,20 +652,18 @@ function closeDeleteModal() {
 }
 
 /* ==========================================================================
-   Avatar Upload & Live Preview (File and URL)
+   Avatar Upload & Live Preview (File Only from Device)
    ========================================================================== */
 function initAvatarInputs() {
     // 1. Registration form avatar
     const regFileInput = document.getElementById('regAvatarFile');
-    const regUrlInput = document.getElementById('regAvatarUrl');
     const regLivePreview = document.getElementById('avatarLivePreview');
     const regFileLabel = document.getElementById('fileUploadLabel');
     const regNameInput = document.getElementById('regName');
 
     if (regNameInput && regLivePreview) {
         regNameInput.addEventListener('input', () => {
-            const currentChoice = document.querySelector('input[name="avatar_choice"]:checked')?.value;
-            if (currentChoice === 'default' && regNameInput.value.trim()) {
+            if ((!regFileInput || !regFileInput.files.length) && regNameInput.value.trim()) {
                 regLivePreview.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(regNameInput.value.trim())}`;
             }
         });
@@ -705,18 +683,8 @@ function initAvatarInputs() {
         });
     }
 
-    if (regUrlInput && regLivePreview) {
-        regUrlInput.addEventListener('input', () => {
-            const url = regUrlInput.value.trim();
-            if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
-                regLivePreview.src = url;
-            }
-        });
-    }
-
     // 2. Profile Edit Modal avatar
     const editFileInput = document.getElementById('editAvatarFileInput');
-    const editUrlInput = document.getElementById('editAvatarUrlInput');
     const editLivePreview = document.getElementById('editAvatarLivePreview');
     const editFileLabel = document.getElementById('editFileLabel');
     const editBio = document.getElementById('editProfileBio');
@@ -741,42 +709,6 @@ function initAvatarInputs() {
             }
         });
     }
-
-    if (editUrlInput && editLivePreview) {
-        editUrlInput.addEventListener('input', () => {
-            const url = editUrlInput.value.trim();
-            if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
-                editLivePreview.src = url;
-            }
-        });
-    }
-}
-
-function switchAvatarMode(mode) {
-    const fileSec = document.getElementById('avatarFileSection');
-    const urlSec = document.getElementById('avatarUrlSection');
-    const defSec = document.getElementById('avatarDefaultSection');
-    const preview = document.getElementById('avatarLivePreview');
-    const nameInput = document.getElementById('regName');
-
-    if (fileSec) fileSec.style.display = mode === 'file' ? 'block' : 'none';
-    if (urlSec) urlSec.style.display = mode === 'url' ? 'block' : 'none';
-    if (defSec) defSec.style.display = mode === 'default' ? 'block' : 'none';
-
-    if (mode === 'default' && preview) {
-        const seed = nameInput && nameInput.value.trim() ? nameInput.value.trim() : 'User';
-        preview.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(seed)}`;
-    }
-}
-
-function switchEditAvatarMode(mode) {
-    const fileSec = document.getElementById('editAvatarFileSection');
-    const urlSec = document.getElementById('editAvatarUrlSection');
-    const curSec = document.getElementById('editAvatarCurrentSection');
-
-    if (fileSec) fileSec.style.display = mode === 'file' ? 'block' : 'none';
-    if (urlSec) urlSec.style.display = mode === 'url' ? 'block' : 'none';
-    if (curSec) curSec.style.display = mode === 'current' ? 'block' : 'none';
 }
 
 function openProfileEditModal() {
