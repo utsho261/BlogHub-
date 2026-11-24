@@ -4,6 +4,11 @@ from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash
 import pymongo
 import mongomock
+try:
+    import certifi
+    CA_FILE = certifi.where()
+except Exception:
+    CA_FILE = None
 
 load_dotenv()
 
@@ -12,23 +17,35 @@ SECRET_KEY = os.getenv("SECRET_KEY", "bloghub_cse458_web_db_2026_key")
 PORT = int(os.getenv("PORT", 5000))
 DEBUG = os.getenv("DEBUG", "True").lower() == "true"
 
+# Global tracking for diagnostic endpoints
+last_db_error = None
+
 def get_db():
     """
     Connect to real MongoDB if available;
     Fallback gracefully to in-memory mongomock if MongoDB is offline,
     so the app runs instantly and reliably anywhere!
     """
+    global last_db_error
     is_mock = False
     try:
         # Atlas cloud connection across regions (e.g. Render Oregon to Atlas Mumbai)
-        # requires sufficient timeout for DNS SRV lookup and TLS handshake (10 seconds)
-        timeout_ms = 10000 if ("mongodb+srv" in MONGO_URI or "@" in MONGO_URI) else 2500
-        client = pymongo.MongoClient(MONGO_URI, serverSelectionTimeoutMS=timeout_ms)
+        # requires sufficient timeout for DNS SRV lookup and TLS handshake (15 seconds)
+        timeout_ms = 15000 if ("mongodb+srv" in MONGO_URI or "@" in MONGO_URI) else 2500
+        client_kwargs = {
+            "serverSelectionTimeoutMS": timeout_ms
+        }
+        if CA_FILE and ("mongodb+srv" in MONGO_URI or "@" in MONGO_URI):
+            client_kwargs["tlsCAFile"] = CA_FILE
+
+        client = pymongo.MongoClient(MONGO_URI, **client_kwargs)
         # Trigger connection check
         client.server_info()
         db = client.get_database("bloghub")
+        last_db_error = None
         print(f"[*] Successfully connected to MongoDB at: {MONGO_URI}")
     except Exception as e:
+        last_db_error = str(e)
         print(f"[!] Live MongoDB not reachable ({e}). Using mongomock in-memory database fallback.")
         client = mongomock.MongoClient()
         db = client["bloghub"]

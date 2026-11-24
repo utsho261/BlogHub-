@@ -49,6 +49,27 @@ else:
 
 # Initialize MongoDB connection
 db, is_mock_db = get_db()
+_last_db_reconnect_attempt = 0
+
+@app.before_request
+def auto_reconnect_mongo():
+    """
+    If the application started in mongomock mode (e.g. during cloud server boot
+    before external DNS/Atlas whitelist was ready), automatically attempt to
+    reconnect to live MongoDB Atlas when traffic arrives.
+    """
+    global db, is_mock_db, _last_db_reconnect_attempt
+    import time
+    if is_mock_db and (time.time() - _last_db_reconnect_attempt > 10):
+        _last_db_reconnect_attempt = time.time()
+        try:
+            real_db, still_mock = get_db()
+            if not still_mock:
+                db = real_db
+                is_mock_db = False
+                print("[*] Automatically promoted connection from mongomock to live MongoDB Atlas!")
+        except Exception:
+            pass
 
 def upload_file_to_cloud(file, folder="bloghub", prefix="img", default_url=None):
     """
@@ -588,6 +609,17 @@ def check_email():
     if existing:
         return jsonify({"valid": False, "message": "Email is already registered."})
     return jsonify({"valid": True, "message": "Email is valid & available!"})
+
+@app.route("/api/db-status")
+def db_diagnostic_status():
+    from config import last_db_error, MONGO_URI
+    return jsonify({
+        "status": "connected" if not is_mock_db else "in-memory-fallback",
+        "is_mock_db": is_mock_db,
+        "last_error": last_db_error,
+        "mongo_uri_set": bool(MONGO_URI and not MONGO_URI.startswith("mongodb://localhost")),
+        "post_count": db.posts.count_documents({})
+    })
 
 # --- Error Handlers ---
 @app.errorhandler(404)

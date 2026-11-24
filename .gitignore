@@ -21,3 +21,6 @@ Thumbs.db
 
 # Test artifacts
 .pytest_cache/
+
+# Local static uploads fallback
+static/uploads/
