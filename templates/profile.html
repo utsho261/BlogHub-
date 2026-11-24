@@ -4,79 +4,121 @@
 
 {% block content %}
 <div class="profile-page-container">
-    <!-- Profile Header Card -->
-    <div class="profile-header-card">
-        <div class="profile-banner-accent"></div>
+    <!-- Modern Profile Header Card with Cover Banner -->
+    <div class="profile-header-card modern-glass-card">
+        <!-- Cinematic Profile Cover Banner -->
+        <div class="profile-cover-banner" id="profileCoverBanner">
+            {% if profile_user.cover_image %}
+                <img src="{{ profile_user.cover_image }}" alt="{{ profile_user.name }}'s cover" class="profile-cover-img" id="profileCoverDisplayImg">
+            {% else %}
+                <div class="profile-cover-mesh-animated" id="profileCoverDefaultMesh"></div>
+            {% endif %}
+            <div class="profile-cover-overlay"></div>
+
+            {% if current_user and current_user.username == profile_user.username %}
+            <button type="button" class="btn-change-cover" onclick="openProfileEditModal('cover')" title="Change Cover Banner">
+                <i class="fa-solid fa-camera"></i> <span>Edit Cover</span>
+            </button>
+            {% endif %}
+        </div>
+
+        <!-- Main Info Bar overlapping Cover -->
         <div class="profile-main-info">
-            <!-- Avatar with optional Edit Camera Trigger -->
+            <!-- Avatar with Neon Border & Edit Trigger -->
             <div class="profile-avatar-wrapper">
                 <img src="{{ profile_user.avatar if profile_user.avatar else 'https://api.dicebear.com/7.x/initials/svg?seed=' + profile_user.name }}" 
                      alt="{{ profile_user.name }}" class="profile-page-avatar" id="profilePageAvatarImg"
                      onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/bottts/svg?seed={{ profile_user.username }}';">
                 {% if current_user and current_user.username == profile_user.username %}
-                <button type="button" class="avatar-edit-badge-btn" onclick="openProfileEditModal()" title="Change Profile Picture">
+                <button type="button" class="avatar-edit-badge-btn" onclick="openProfileEditModal('avatar')" title="Change Profile Picture">
                     <i class="fa-solid fa-camera"></i>
                 </button>
                 {% endif %}
+                <span class="avatar-active-pulse" title="Active Author"></span>
             </div>
 
+            <!-- Identity and Bio -->
             <div class="profile-texts">
                 <div class="profile-name-bar">
                     <h1 class="profile-full-name">{{ profile_user.name }}</h1>
+                    <span class="verified-badge" title="Verified Author"><i class="fa-solid fa-circle-check"></i></span>
                     <span class="profile-handle">@{{ profile_user.username }}</span>
-                    <span class="profile-role-badge"><i class="fa-solid fa-award"></i> {{ profile_user.role if profile_user.role else 'Author' }}</span>
+                    <span class="profile-role-badge">
+                        <i class="fa-solid fa-sparkles"></i> {{ profile_user.role if profile_user.role else 'Author & Tech Writer' }}
+                    </span>
                     
                     {% if current_user and current_user.username == profile_user.username %}
                     <button type="button" class="btn btn-outline btn-sm edit-profile-btn" onclick="openProfileEditModal()">
-                        <i class="fa-solid fa-pen"></i> Edit Profile
+                        <i class="fa-solid fa-user-pen"></i> Edit Profile
                     </button>
                     {% endif %}
                 </div>
 
                 <p class="profile-bio-text">
-                    {{ profile_user.bio if profile_user.bio else 'Passionate writer and tech explorer on BlogHub.' }}
+                    {{ profile_user.bio if profile_user.bio else 'Passionate writer and technology explorer on BlogHub.' }}
                 </p>
 
                 <div class="profile-meta-row">
-                    <span><i class="fa-regular fa-calendar"></i> Member since {{ profile_user.created_at|time_ago }}</span>
+                    <span class="meta-item"><i class="fa-regular fa-calendar-check"></i> Member since {{ profile_user.created_at|time_ago }}</span>
                     <span class="meta-dot">•</span>
-                    <span><i class="fa-regular fa-envelope"></i> {{ profile_user.email }}</span>
+                    <span class="meta-item"><i class="fa-regular fa-envelope"></i> {{ profile_user.email }}</span>
+                    <span class="meta-dot">•</span>
+                    <span class="meta-item academic-tag"><i class="fa-solid fa-graduation-cap"></i> CSE, BUBT</span>
                 </div>
             </div>
 
-            <!-- Stats Column -->
+            <!-- Modern Glass Stats Dashboard -->
             <div class="profile-stats-grid">
-                <div class="p-stat-box">
+                <div class="p-stat-box stat-glow-indigo">
+                    <div class="stat-icon-wrap"><i class="fa-solid fa-feather-pointed"></i></div>
                     <span class="p-stat-val">{{ posts|length }}</span>
                     <span class="p-stat-lbl">Articles</span>
                 </div>
-                <div class="p-stat-box">
+                <div class="p-stat-box stat-glow-cyan">
+                    <div class="stat-icon-wrap"><i class="fa-regular fa-eye"></i></div>
                     <span class="p-stat-val">{{ total_views }}</span>
-                    <span class="p-stat-lbl">Total Views</span>
+                    <span class="p-stat-lbl">Story Reads</span>
                 </div>
-                <div class="p-stat-box">
+                <div class="p-stat-box stat-glow-rose">
+                    <div class="stat-icon-wrap"><i class="fa-regular fa-heart"></i></div>
                     <span class="p-stat-val">{{ total_likes }}</span>
-                    <span class="p-stat-lbl">Likes Received</span>
+                    <span class="p-stat-lbl">Likes Earned</span>
+                </div>
+                <div class="p-stat-box stat-glow-amber">
+                    <div class="stat-icon-wrap"><i class="fa-regular fa-comments"></i></div>
+                    <span class="p-stat-val">{{ total_comments if total_comments is defined else 0 }}</span>
+                    <span class="p-stat-lbl">Comments</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- User's Articles Section -->
+    <!-- User's Articles Section with Filter Tabs -->
     <div class="profile-articles-section">
-        <div class="section-header">
-            <h2 class="section-title"><i class="fa-solid fa-book-bookmark text-primary"></i> Published Stories ({{ posts|length }})</h2>
+        <div class="profile-section-header">
+            <div class="profile-tabs-wrap">
+                <button type="button" class="profile-tab-btn active" data-filter="all">
+                    <i class="fa-solid fa-layer-group"></i> All Stories <span class="tab-count-pill">{{ posts|length }}</span>
+                </button>
+                <button type="button" class="profile-tab-btn" data-filter="popular">
+                    <i class="fa-solid fa-fire"></i> Most Popular
+                </button>
+                <button type="button" class="profile-tab-btn" data-filter="recent">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Latest
+                </button>
+            </div>
+
             {% if current_user and current_user.username == profile_user.username %}
-            <a href="{{ url_for('create_post') }}" class="btn btn-primary btn-sm">
-                <i class="fa-solid fa-plus"></i> New Story
+            <a href="{{ url_for('create_post') }}" class="btn btn-primary btn-sm btn-glow">
+                <i class="fa-solid fa-pen-nib"></i> Write New Story
             </a>
             {% endif %}
         </div>
 
         {% if posts %}
-        <div class="posts-grid">
+        <div class="posts-grid" id="profilePostsGrid">
             {% for post in posts %}
-            <article class="post-card">
+            <article class="post-card animated-card" data-views="{{ post.views }}" data-likes="{{ post.likes_count }}" data-date="{{ post.created_at }}">
                 <div class="post-card-cover-wrapper">
                     <a href="{{ url_for('post_detail', post_id=post._id) }}">
                         <img src="{{ post.cover_image }}" alt="{{ post.title }}" class="post-card-img" loading="lazy">
@@ -99,9 +141,9 @@
 
                     <div class="post-card-footer">
                         <div class="post-metrics">
-                            <span><i class="fa-regular fa-eye"></i> {{ post.views }}</span>
-                            <span><i class="fa-regular fa-heart"></i> {{ post.likes_count }}</span>
-                            <span><i class="fa-regular fa-comment"></i> {{ post.comments_count }}</span>
+                            <span title="Total Views"><i class="fa-regular fa-eye"></i> {{ post.views }}</span>
+                            <span title="Likes"><i class="fa-regular fa-heart"></i> {{ post.likes_count }}</span>
+                            <span title="Comments"><i class="fa-regular fa-comment"></i> {{ post.comments_count }}</span>
                         </div>
 
                         {% if current_user and (current_user.username|lower == profile_user.username|lower or current_user.id|string == profile_user._id|string) %}
@@ -113,6 +155,10 @@
                                 <i class="fa-solid fa-trash-can"></i>
                             </button>
                         </div>
+                        {% else %}
+                        <a href="{{ url_for('post_detail', post_id=post._id) }}" class="read-more-btn">
+                            Read Story <i class="fa-solid fa-arrow-right"></i>
+                        </a>
                         {% endif %}
                     </div>
                 </div>
@@ -120,68 +166,110 @@
             {% endfor %}
         </div>
         {% else %}
-        <div class="empty-state-card">
-            <i class="fa-regular fa-newspaper empty-icon"></i>
+        <div class="empty-state-card modern-glass-card">
+            <div class="empty-icon"><i class="fa-regular fa-newspaper"></i></div>
             <h3>No articles published yet</h3>
             <p>{{ profile_user.name }} hasn't published any stories yet.</p>
             {% if current_user and current_user.username == profile_user.username %}
-            <a href="{{ url_for('create_post') }}" class="btn btn-primary"><i class="fa-solid fa-pen-nib"></i> Write Your First Story</a>
+            <a href="{{ url_for('create_post') }}" class="btn btn-primary btn-glow">
+                <i class="fa-solid fa-pen-nib"></i> Write Your First Story
+            </a>
             {% endif %}
         </div>
         {% endif %}
     </div>
 </div>
 
-<!-- Edit Profile & Avatar Modal -->
+<!-- Modern Edit Profile Modal (Avatar, Cover Banner & Info) -->
 {% if current_user and current_user.username == profile_user.username %}
 <div class="modal-backdrop" id="profileEditModal">
-    <div class="modal-card modal-card-wide">
+    <div class="modal-card modal-card-wide modern-glass-card">
         <div class="modal-header-row">
-            <h3 class="modal-title"><i class="fa-solid fa-user-pen text-primary"></i> Edit Profile & Avatar</h3>
+            <h3 class="modal-title">
+                <i class="fa-solid fa-sliders text-primary"></i> Edit Profile & Visuals
+            </h3>
             <button type="button" class="modal-close-icon" onclick="closeProfileEditModal()">&times;</button>
         </div>
 
         <form action="{{ url_for('update_profile') }}" method="POST" enctype="multipart/form-data" class="modern-form" id="profileUpdateForm">
-            <!-- Full Name -->
-            <div class="form-group">
-                <label for="editProfileName" class="form-label">Full Name <span class="required">*</span></label>
-                <input type="text" id="editProfileName" name="name" class="form-control" value="{{ profile_user.name }}" required minlength="2" maxlength="60">
+            <!-- 1. Cover Banner Upload Section (Device File Only) -->
+            <div class="form-section-card">
+                <label class="section-badge-lbl"><i class="fa-solid fa-image"></i> Cover Banner</label>
+                <p class="section-desc-lbl">Upload a wide panoramic banner image from your PC/device for your profile background.</p>
+                
+                <div class="cover-upload-area">
+                    <div class="cover-preview-box" id="modalCoverPreviewBox">
+                        {% if profile_user.cover_image %}
+                            <img id="editCoverLivePreview" src="{{ profile_user.cover_image }}" alt="Cover preview" class="cover-preview-img">
+                        {% else %}
+                            <div class="cover-preview-placeholder" id="editCoverPlaceholder">
+                                <i class="fa-solid fa-panorama"></i>
+                                <span>No custom banner set (currently using default mesh gradient)</span>
+                            </div>
+                            <img id="editCoverLivePreview" src="" alt="Cover preview" class="cover-preview-img" style="display: none;">
+                        {% endif %}
+                    </div>
+
+                    <label for="editCoverFileInput" class="file-upload-box cover-dropzone">
+                        <i class="fa-solid fa-cloud-arrow-up file-upload-icon"></i>
+                        <span class="file-upload-text" id="editCoverFileLabel">Choose cover banner from your device (PNG, JPG, WebP)</span>
+                        <input type="file" id="editCoverFileInput" name="cover_file" accept="image/png, image/jpeg, image/jpg, image/webp" style="display: none;">
+                    </label>
+                </div>
             </div>
 
-            <!-- Avatar Section (Direct File Upload from Device) -->
-            <div class="avatar-selection-card">
-                <label class="form-label">Profile Picture <span class="optional">(Choose file to update, or keep current)</span></label>
-                
+            <!-- 2. Profile Picture Section (Device File Only) -->
+            <div class="form-section-card">
+                <label class="section-badge-lbl"><i class="fa-solid fa-user-circle"></i> Profile Avatar</label>
+                <p class="section-desc-lbl">Choose a square avatar photo from your device, or leave untouched to keep current.</p>
+
                 <div class="avatar-selection-layout">
-                    <!-- Live Preview -->
-                    <div class="avatar-preview-wrapper">
-                        <img id="editAvatarLivePreview" src="{{ profile_user.avatar if profile_user.avatar else 'https://api.dicebear.com/7.x/initials/svg?seed=' + profile_user.name }}" alt="Avatar preview" class="avatar-preview-circle" onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/bottts/svg?seed={{ profile_user.username }}';">
+                    <div class="avatar-preview-wrapper modal-avatar-preview">
+                        <img id="editAvatarLivePreview" 
+                             src="{{ profile_user.avatar if profile_user.avatar else 'https://api.dicebear.com/7.x/initials/svg?seed=' + profile_user.name }}" 
+                             alt="Avatar preview" class="avatar-preview-circle" 
+                             onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/bottts/svg?seed={{ profile_user.username }}';">
                     </div>
 
                     <div class="avatar-inputs-container">
                         <label for="editAvatarFileInput" class="file-upload-box">
                             <i class="fa-solid fa-camera file-upload-icon"></i>
-                            <span class="file-upload-text" id="editFileLabel">Click to select new image from your device</span>
+                            <span class="file-upload-text" id="editFileLabel">Select new avatar from your device</span>
                             <input type="file" id="editAvatarFileInput" name="avatar_file" accept="image/png, image/jpeg, image/jpg, image/webp, image/gif" style="display: none;">
                         </label>
-                        <span class="helper-text">Leave unchanged to keep your current photo.</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Bio -->
-            <div class="form-group">
-                <div class="field-label-row">
-                    <label for="editProfileBio" class="form-label">Bio</label>
-                    <span class="char-counter" id="editBioCounter">{{ (profile_user.bio or '')|length }} / 300</span>
+            <!-- 3. Profile Information -->
+            <div class="form-section-card">
+                <label class="section-badge-lbl"><i class="fa-solid fa-id-card"></i> Personal Details</label>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label for="editProfileName" class="form-label">Full Name <span class="required">*</span></label>
+                        <input type="text" id="editProfileName" name="name" class="form-control" value="{{ profile_user.name }}" required minlength="2" maxlength="60">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editProfileRole" class="form-label">Role / Headline</label>
+                        <input type="text" id="editProfileRole" name="role" class="form-control" value="{{ profile_user.role if profile_user.role else 'Author & Tech Writer' }}" placeholder="e.g. Full-Stack Developer | BUBT CSE" maxlength="60">
+                    </div>
                 </div>
-                <textarea id="editProfileBio" name="bio" class="form-control" rows="3" maxlength="300">{{ profile_user.bio or '' }}</textarea>
+
+                <div class="form-group">
+                    <div class="field-label-row">
+                        <label for="editProfileBio" class="form-label">Bio / About</label>
+                        <span class="char-counter" id="editBioCounter">{{ (profile_user.bio or '')|length }} / 300</span>
+                    </div>
+                    <textarea id="editProfileBio" name="bio" class="form-control" rows="3" maxlength="300" placeholder="Share a few words about yourself, your tech stack, or interests...">{{ profile_user.bio or '' }}</textarea>
+                </div>
             </div>
 
             <!-- Modal Actions -->
             <div class="modal-actions-right">
                 <button type="button" class="btn btn-ghost" onclick="closeProfileEditModal()">Cancel</button>
-                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Profile</button>
+                <button type="submit" class="btn btn-primary btn-glow"><i class="fa-solid fa-floppy-disk"></i> Save Profile & Visuals</button>
             </div>
         </form>
     </div>
@@ -190,7 +278,7 @@
 
 <!-- Delete Post Confirmation Modal -->
 <div class="modal-backdrop" id="deleteModalBackdrop">
-    <div class="modal-card">
+    <div class="modal-card modern-glass-card">
         <div class="modal-icon-danger">
             <i class="fa-solid fa-triangle-exclamation"></i>
         </div>

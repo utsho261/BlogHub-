@@ -728,11 +728,88 @@ function initAvatarInputs() {
             }
         });
     }
+
+    // 3. Profile Edit Modal Cover Banner
+    const editCoverFileInput = document.getElementById('editCoverFileInput');
+    const editCoverLivePreview = document.getElementById('editCoverLivePreview');
+    const editCoverFileLabel = document.getElementById('editCoverFileLabel');
+    const editCoverPlaceholder = document.getElementById('editCoverPlaceholder');
+
+    if (editCoverFileInput && editCoverLivePreview) {
+        editCoverFileInput.addEventListener('change', () => {
+            if (editCoverFileInput.files && editCoverFileInput.files[0]) {
+                const file = editCoverFileInput.files[0];
+                if (editCoverFileLabel) editCoverFileLabel.textContent = file.name;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    editCoverLivePreview.src = e.target.result;
+                    editCoverLivePreview.style.display = 'block';
+                    if (editCoverPlaceholder) editCoverPlaceholder.style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    // 4. Profile Tab Filtering & Sorting (All, Popular, Recent)
+    initProfileTabs();
 }
 
-function openProfileEditModal() {
+function initProfileTabs() {
+    const tabBtns = document.querySelectorAll('.profile-tab-btn');
+    const grid = document.getElementById('profilePostsGrid');
+    if (!tabBtns.length || !grid) return;
+
+    const cards = Array.from(grid.querySelectorAll('.post-card'));
+    // Store original order
+    cards.forEach((card, index) => card.dataset.origIndex = index);
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            tabBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const filter = btn.dataset.filter;
+            let sorted = [...cards];
+
+            if (filter === 'popular') {
+                sorted.sort((a, b) => {
+                    const viewsA = parseInt(a.dataset.views || 0, 10);
+                    const viewsB = parseInt(b.dataset.views || 0, 10);
+                    return viewsB - viewsA;
+                });
+            } else if (filter === 'recent') {
+                sorted.sort((a, b) => {
+                    const dateA = new Date(a.dataset.date || 0);
+                    const dateB = new Date(b.dataset.date || 0);
+                    return dateB - dateA;
+                });
+            } else {
+                sorted.sort((a, b) => parseInt(a.dataset.origIndex, 10) - parseInt(b.dataset.origIndex, 10));
+            }
+
+            // Animate reordering
+            grid.style.opacity = '0.5';
+            setTimeout(() => {
+                sorted.forEach(card => grid.appendChild(card));
+                grid.style.opacity = '1';
+            }, 150);
+        });
+    });
+}
+
+function openProfileEditModal(focusField) {
     const modal = document.getElementById('profileEditModal');
-    if (modal) modal.classList.add('show');
+    if (modal) {
+        modal.classList.add('show');
+        if (focusField === 'cover') {
+            const coverInput = document.getElementById('editCoverFileInput');
+            if (coverInput) coverInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else if (focusField === 'avatar') {
+            const avatarInput = document.getElementById('editAvatarFileInput');
+            if (avatarInput) avatarInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
 }
 
 function closeProfileEditModal() {

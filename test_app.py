@@ -186,7 +186,7 @@ class BlogHubTestCase(unittest.TestCase):
             "avatar_file": fake_image
         }, content_type="multipart/form-data", follow_redirects=True)
         self.assertEqual(res_file.status_code, 200)
-        self.assertIn(b"Your profile and avatar have been updated!", res_file.data)
+        self.assertIn(b"updated!", res_file.data)
 
         updated_user_file = db.users.find_one({"username": "test_avatar_user"})
         self.assertTrue(

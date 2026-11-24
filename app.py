@@ -573,13 +573,15 @@ def profile(username):
 
     total_views = sum(p.get("views", 0) for p in user_posts)
     total_likes = sum(len(p.get("likes", [])) for p in user_posts)
+    total_comments = sum(len(p.get("comments", [])) for p in user_posts)
 
     return render_template(
         "profile.html",
         profile_user=user_doc,
         posts=user_posts,
         total_views=total_views,
-        total_likes=total_likes
+        total_likes=total_likes,
+        total_comments=total_comments
     )
 
 @app.route("/profile/update", methods=["POST"])
@@ -590,6 +592,7 @@ def update_profile():
 
     name = request.form.get("name", "").strip()
     bio = request.form.get("bio", "").strip()
+    role = request.form.get("role", "").strip()
 
     if not name or len(name) < 2 or len(name) > 60:
         flash("Name must be between 2 and 60 characters.", "danger")
@@ -600,7 +603,10 @@ def update_profile():
         return redirect(url_for("profile", username=username))
 
     update_fields = {"name": name, "bio": bio}
+    if role:
+        update_fields["role"] = role[:60]
 
+    # Avatar file upload (from device)
     avatar_file = request.files.get("avatar_file")
     if avatar_file and avatar_file.filename:
         new_avatar = upload_file_to_cloud(
@@ -614,6 +620,18 @@ def update_profile():
             session["user"]["avatar"] = new_avatar
             session.modified = True
 
+    # Profile Cover Banner file upload (from device)
+    cover_file = request.files.get("cover_file")
+    if cover_file and cover_file.filename:
+        new_cover = upload_file_to_cloud(
+            cover_file,
+            folder="bloghub/covers",
+            prefix=f"{username}_cover",
+            default_url=None
+        )
+        if new_cover:
+            update_fields["cover_image"] = new_cover
+
     session["user"]["name"] = name
     session.modified = True
     db.users.update_one({"username": username}, {"$set": update_fields})
@@ -624,7 +642,7 @@ def update_profile():
         post_updates["author_avatar"] = update_fields["avatar"]
     db.posts.update_many({"author_username": username}, {"$set": post_updates})
 
-    flash("Your profile and avatar have been updated!", "success")
+    flash("Your profile, avatar, and cover banner have been updated!", "success")
     return redirect(url_for("profile", username=username))
 
 # --- Real-Time Validation API Endpoints ---
