@@ -183,5 +183,36 @@ class BlogHubTestCase(unittest.TestCase):
             "cloudinary" in updated_user_file["avatar"]
         )
 
+    def test_08_author_can_delete_own_post(self):
+        """Test author can delete their own post and unauthorized user cannot"""
+        # 1. Login as author (utsho_roy)
+        self.client.post("/login", data={
+            "identifier": "utsho_roy",
+            "password": "BlogHub@2026"
+        })
+
+        # 2. Create a test post to delete
+        res_create = self.client.post("/post/create", data={
+            "title": "Post To Be Deleted By Author",
+            "category": "Technology",
+            "summary": "This is a temporary post that will be deleted shortly by the author.",
+            "content": "Here is the full content of the post to be deleted to satisfy minlength.",
+            "tags": "Test, Deletion"
+        }, follow_redirects=True)
+        self.assertEqual(res_create.status_code, 200)
+
+        created_post = db.posts.find_one({"title": "Post To Be Deleted By Author"})
+        self.assertIsNotNone(created_post)
+        post_id = str(created_post["_id"])
+
+        # 3. Delete post as author
+        res_delete = self.client.post(f"/post/{post_id}/delete", follow_redirects=True)
+        self.assertEqual(res_delete.status_code, 200)
+        self.assertIn(b"permanently deleted", res_delete.data)
+
+        # 4. Verify post no longer exists in database
+        deleted_check = db.posts.find_one({"_id": ObjectId(post_id)})
+        self.assertIsNone(deleted_check)
+
 if __name__ == "__main__":
     unittest.main()

@@ -651,6 +651,25 @@ function closeDeleteModal() {
     if (backdrop) backdrop.classList.remove('show');
 }
 
+// Global backdrop click & escape key listener for modals
+document.addEventListener('click', (e) => {
+    const deleteModal = document.getElementById('deleteModalBackdrop');
+    if (deleteModal && e.target === deleteModal) {
+        closeDeleteModal();
+    }
+    const profileModal = document.getElementById('editProfileModal');
+    if (profileModal && e.target === profileModal) {
+        closeProfileEditModal();
+    }
+});
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        closeDeleteModal();
+        closeProfileEditModal();
+    }
+});
+
 /* ==========================================================================
    Avatar Upload & Live Preview (File Only from Device)
    ========================================================================== */

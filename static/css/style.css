@@ -1894,16 +1894,27 @@ img {
     height: 32px;
     border-radius: var(--radius-md);
     background: rgba(255, 255, 255, 0.05);
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     color: var(--text-secondary);
     font-size: 0.85rem;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all var(--transition-fast);
 }
 
 .btn-icon-subtle:hover {
     background: var(--primary);
     color: #fff;
+    border-color: var(--primary);
+}
+
+.btn-icon-subtle.btn-delete:hover,
+.btn-icon-subtle.text-danger:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--accent-red);
+    border-color: rgba(239, 68, 68, 0.4);
 }
 
 /* ==========================================================================

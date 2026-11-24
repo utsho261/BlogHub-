@@ -448,12 +448,23 @@ def delete_post(post_id):
         abort(404)
 
     user = session["user"]
-    if str(post.get("author_username")) != user["username"]:
-        flash("Unauthorized deletion attempt.", "danger")
+    # Verify authorship by either username or author_id
+    is_author = (
+        str(post.get("author_username", "")).lower() == str(user.get("username", "")).lower() or
+        str(post.get("author_id", "")) == str(user.get("id", ""))
+    )
+    if not is_author:
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.is_json:
+            return jsonify({"success": False, "message": "Unauthorized deletion attempt."}), 403
+        flash("You do not have permission to delete this post.", "danger")
         return redirect(url_for("post_detail", post_id=post_id))
 
     db.posts.delete_one({"_id": obj_id})
-    flash("Post has been permanently deleted.", "info")
+
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.is_json:
+        return jsonify({"success": True, "message": "Post permanently deleted."})
+
+    flash("Your post has been permanently deleted.", "info")
     return redirect(url_for("profile", username=user["username"]))
 
 @app.route("/post/<post_id>/like", methods=["POST"])
