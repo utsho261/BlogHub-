@@ -192,83 +192,85 @@
         </div>
 
         <form action="{{ url_for('update_profile') }}" method="POST" enctype="multipart/form-data" class="modern-form" id="profileUpdateForm">
-            <!-- 1. Cover Banner Upload Section (Device File Only) -->
-            <div class="form-section-card">
-                <label class="section-badge-lbl"><i class="fa-solid fa-image"></i> Cover Banner</label>
-                <p class="section-desc-lbl">Upload a wide panoramic banner image from your PC/device for your profile background.</p>
-                
-                <div class="cover-upload-area">
-                    <div class="cover-preview-box" id="modalCoverPreviewBox">
-                        {% if profile_user.cover_image %}
-                            <img id="editCoverLivePreview" src="{{ profile_user.cover_image }}" alt="Cover preview" class="cover-preview-img">
-                        {% else %}
-                            <div class="cover-preview-placeholder" id="editCoverPlaceholder">
-                                <i class="fa-solid fa-panorama"></i>
-                                <span>No custom banner set (currently using default mesh gradient)</span>
-                            </div>
-                            <img id="editCoverLivePreview" src="" alt="Cover preview" class="cover-preview-img" style="display: none;">
-                        {% endif %}
-                    </div>
+            <div class="modal-body-scrollable">
+                <!-- 1. Cover Banner Upload Section (Device File Only) -->
+                <div class="form-section-card">
+                    <label class="section-badge-lbl"><i class="fa-solid fa-image"></i> Cover Banner</label>
+                    <p class="section-desc-lbl">Upload a wide panoramic banner image from your PC/device for your profile background.</p>
+                    
+                    <div class="cover-upload-area">
+                        <div class="cover-preview-box" id="modalCoverPreviewBox">
+                            {% if profile_user.cover_image %}
+                                <img id="editCoverLivePreview" src="{{ profile_user.cover_image }}" alt="Cover preview" class="cover-preview-img">
+                            {% else %}
+                                <div class="cover-preview-placeholder" id="editCoverPlaceholder">
+                                    <i class="fa-solid fa-panorama"></i>
+                                    <span>No custom banner set (currently using default mesh gradient)</span>
+                                </div>
+                                <img id="editCoverLivePreview" src="" alt="Cover preview" class="cover-preview-img" style="display: none;">
+                            {% endif %}
+                        </div>
 
-                    <label for="editCoverFileInput" class="file-upload-box cover-dropzone">
-                        <i class="fa-solid fa-cloud-arrow-up file-upload-icon"></i>
-                        <span class="file-upload-text" id="editCoverFileLabel">Choose cover banner from your device (PNG, JPG, WebP)</span>
-                        <input type="file" id="editCoverFileInput" name="cover_file" accept="image/png, image/jpeg, image/jpg, image/webp" style="display: none;">
-                    </label>
-                </div>
-            </div>
-
-            <!-- 2. Profile Picture Section (Device File Only) -->
-            <div class="form-section-card">
-                <label class="section-badge-lbl"><i class="fa-solid fa-user-circle"></i> Profile Avatar</label>
-                <p class="section-desc-lbl">Choose a square avatar photo from your device, or leave untouched to keep current.</p>
-
-                <div class="avatar-selection-layout">
-                    <div class="avatar-preview-wrapper modal-avatar-preview">
-                        <img id="editAvatarLivePreview" 
-                             src="{{ profile_user.avatar if profile_user.avatar else 'https://api.dicebear.com/7.x/initials/svg?seed=' + profile_user.name }}" 
-                             alt="Avatar preview" class="avatar-preview-circle" 
-                             onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/bottts/svg?seed={{ profile_user.username }}';">
-                    </div>
-
-                    <div class="avatar-inputs-container">
-                        <label for="editAvatarFileInput" class="file-upload-box">
-                            <i class="fa-solid fa-camera file-upload-icon"></i>
-                            <span class="file-upload-text" id="editFileLabel">Select new avatar from your device</span>
-                            <input type="file" id="editAvatarFileInput" name="avatar_file" accept="image/png, image/jpeg, image/jpg, image/webp, image/gif" style="display: none;">
+                        <label for="editCoverFileInput" class="file-upload-box cover-dropzone">
+                            <i class="fa-solid fa-cloud-arrow-up file-upload-icon"></i>
+                            <span class="file-upload-text" id="editCoverFileLabel">Choose cover banner from your device (PNG, JPG, WebP)</span>
+                            <input type="file" id="editCoverFileInput" name="cover_file" accept="image/png, image/jpeg, image/jpg, image/webp" style="display: none;">
                         </label>
                     </div>
                 </div>
-            </div>
 
-            <!-- 3. Profile Information -->
-            <div class="form-section-card">
-                <label class="section-badge-lbl"><i class="fa-solid fa-id-card"></i> Personal Details</label>
+                <!-- 2. Profile Picture Section (Device File Only) -->
+                <div class="form-section-card">
+                    <label class="section-badge-lbl"><i class="fa-solid fa-user-circle"></i> Profile Avatar</label>
+                    <p class="section-desc-lbl">Choose a square avatar photo from your device, or leave untouched to keep current.</p>
 
-                <div class="form-grid-2">
-                    <div class="form-group">
-                        <label for="editProfileName" class="form-label">Full Name <span class="required">*</span></label>
-                        <input type="text" id="editProfileName" name="name" class="form-control" value="{{ profile_user.name }}" required minlength="2" maxlength="60">
-                    </div>
+                    <div class="avatar-selection-layout">
+                        <div class="avatar-preview-wrapper modal-avatar-preview">
+                            <img id="editAvatarLivePreview" 
+                                 src="{{ profile_user.avatar if profile_user.avatar else 'https://api.dicebear.com/7.x/initials/svg?seed=' + profile_user.name }}" 
+                                 alt="Avatar preview" class="avatar-preview-circle" 
+                                 onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/bottts/svg?seed={{ profile_user.username }}';">
+                        </div>
 
-                    <div class="form-group">
-                        <label for="editProfileRole" class="form-label">Role / Headline</label>
-                        <input type="text" id="editProfileRole" name="role" class="form-control" value="{{ profile_user.role if profile_user.role else 'Author & Tech Writer' }}" placeholder="e.g. Full-Stack Developer | BUBT CSE" maxlength="60">
+                        <div class="avatar-inputs-container">
+                            <label for="editAvatarFileInput" class="file-upload-box">
+                                <i class="fa-solid fa-camera file-upload-icon"></i>
+                                <span class="file-upload-text" id="editFileLabel">Select new avatar from your device</span>
+                                <input type="file" id="editAvatarFileInput" name="avatar_file" accept="image/png, image/jpeg, image/jpg, image/webp, image/gif" style="display: none;">
+                            </label>
+                        </div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <div class="field-label-row">
-                        <label for="editProfileBio" class="form-label">Bio / About</label>
-                        <span class="char-counter" id="editBioCounter">{{ (profile_user.bio or '')|length }} / 300</span>
+                <!-- 3. Profile Information -->
+                <div class="form-section-card">
+                    <label class="section-badge-lbl"><i class="fa-solid fa-id-card"></i> Personal Details</label>
+
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="editProfileName" class="form-label">Full Name <span class="required">*</span></label>
+                            <input type="text" id="editProfileName" name="name" class="form-control" value="{{ profile_user.name }}" required minlength="2" maxlength="60">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="editProfileRole" class="form-label">Role / Headline</label>
+                            <input type="text" id="editProfileRole" name="role" class="form-control" value="{{ profile_user.role if profile_user.role else 'Author & Tech Writer' }}" placeholder="e.g. Full-Stack Developer | BUBT CSE" maxlength="60">
+                        </div>
                     </div>
-                    <textarea id="editProfileBio" name="bio" class="form-control" rows="3" maxlength="300" placeholder="Share a few words about yourself, your tech stack, or interests...">{{ profile_user.bio or '' }}</textarea>
+
+                    <div class="form-group">
+                        <div class="field-label-row">
+                            <label for="editProfileBio" class="form-label">Bio / About</label>
+                            <span class="char-counter" id="editBioCounter">{{ (profile_user.bio or '')|length }} / 300</span>
+                        </div>
+                        <textarea id="editProfileBio" name="bio" class="form-control" rows="3" maxlength="300" placeholder="Share a few words about yourself, your tech stack, or interests...">{{ profile_user.bio or '' }}</textarea>
+                    </div>
                 </div>
             </div>
 
             <!-- Modal Actions -->
             <div class="modal-actions-right">
-                <button type="button" class="btn btn-ghost" onclick="closeProfileEditModal()">Cancel</button>
+                <button type="button" class="btn btn-ghost" onclick="closeProfileEditModal()"><i class="fa-solid fa-xmark"></i> Cancel</button>
                 <button type="submit" class="btn btn-primary btn-glow"><i class="fa-solid fa-floppy-disk"></i> Save Profile & Visuals</button>
             </div>
         </form>

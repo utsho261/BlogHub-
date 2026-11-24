@@ -58,6 +58,13 @@
     padding: 0;
 }
 
+html {
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    width: 100%;
+    max-width: 100vw;
+}
+
 body {
     background-color: var(--bg-main);
     color: var(--text-primary);
@@ -67,6 +74,10 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+    position: relative;
 }
 
 a {
@@ -2408,13 +2419,15 @@ img {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(6px);
-    z-index: 1100;
+    background: rgba(0, 0, 0, 0.82);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 1200;
     display: none;
     align-items: center;
     justify-content: center;
-    padding: 1.5rem;
+    padding: 1rem;
+    overflow-y: auto;
 }
 
 .modal-backdrop.show {
@@ -2431,6 +2444,11 @@ img {
     text-align: center;
     box-shadow: var(--shadow-lg);
     animation: zoomIn 0.2s ease-out;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    margin: auto;
+    position: relative;
 }
 
 .modal-icon-danger {
@@ -2752,39 +2770,90 @@ img {
 }
 
 .modal-card-wide {
-    max-width: 580px;
+    max-width: 620px;
+    width: 100%;
     text-align: left;
+    padding: 0;
+    overflow: hidden;
+    max-height: 88vh;
+    border-radius: var(--radius-xl);
+    display: flex;
+    flex-direction: column;
 }
 
 .modal-header-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.25rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--border-subtle);
+    padding: 1.25rem 1.5rem;
+    background: rgba(17, 24, 39, 0.98);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .modal-close-icon {
-    background: transparent;
-    border: none;
-    font-size: 1.5rem;
-    color: var(--text-muted);
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    color: var(--text-primary);
     cursor: pointer;
+    transition: all var(--transition-fast);
     line-height: 1;
 }
 
 .modal-close-icon:hover {
-    color: var(--text-primary);
+    background: rgba(239, 68, 68, 0.3);
+    border-color: rgba(239, 68, 68, 0.6);
+    color: var(--accent-red);
+    transform: rotate(90deg);
+}
+
+.modal-body-scrollable {
+    overflow-y: auto;
+    padding: 1.25rem 1.5rem;
+    flex: 1;
+    max-height: calc(88vh - 145px);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.modal-body-scrollable::-webkit-scrollbar {
+    width: 6px;
+}
+.modal-body-scrollable::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 10px;
+}
+.modal-body-scrollable::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.4);
+    border-radius: 10px;
+}
+.modal-body-scrollable::-webkit-scrollbar-thumb:hover {
+    background: rgba(99, 102, 241, 0.7);
 }
 
 .modal-actions-right {
     display: flex;
     justify-content: flex-end;
+    align-items: center;
     gap: 0.75rem;
-    margin-top: 1.5rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border-subtle);
+    padding: 1rem 1.5rem;
+    background: rgba(17, 24, 39, 0.98);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
 }
 
 /* ==========================================================================
@@ -2810,14 +2879,58 @@ img {
     to { opacity: 1; transform: scale(1); }
 }
 
+.main-content {
+    overflow-x: hidden;
+    width: 100%;
+}
+
 @media (max-width: 900px) {
     .nav-search-form { display: none; }
     .hero-title { font-size: 2.4rem; }
     .footer-container { grid-template-columns: 1fr; gap: 2rem; }
     .form-row-2 { grid-template-columns: 1fr; }
-    .profile-main-info { flex-direction: column; align-items: flex-start; top: -35px; margin-bottom: 0; }
-    .profile-stats-grid { width: 100%; grid-template-columns: repeat(2, 1fr); margin-top: 1rem; }
+    
+    /* Profile Responsive */
+    .profile-page-container {
+        padding: 0 1rem;
+        margin: 1.5rem auto 3rem;
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
+    }
     .profile-cover-banner { height: 180px; }
+    .profile-main-info {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        top: -45px;
+        margin-bottom: 0;
+        padding: 0 1.25rem 1.5rem;
+        gap: 1rem;
+    }
+    .profile-texts {
+        min-width: 0;
+        width: 100%;
+        text-align: center;
+        padding-top: 0.5rem;
+    }
+    .profile-name-bar {
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .edit-profile-btn {
+        margin-left: 0;
+        margin-top: 0.4rem;
+    }
+    .profile-meta-row {
+        justify-content: center;
+    }
+    .profile-stats-grid {
+        width: 100%;
+        grid-template-columns: repeat(2, 1fr);
+        margin-top: 0.75rem;
+    }
     .form-grid-2 { grid-template-columns: 1fr; }
 }
 
@@ -2829,12 +2942,98 @@ img {
     .post-detail-title { font-size: 2rem; }
     .pwd-checklist { grid-template-columns: 1fr; }
     .hero-actions { flex-direction: column; }
-    .profile-cover-banner { height: 140px; }
-    .profile-full-name { font-size: 1.6rem; }
-    .profile-name-bar { flex-direction: column; align-items: flex-start; gap: 0.4rem; }
-    .edit-profile-btn { margin-left: 0; width: 100%; justify-content: center; }
-    .btn-change-cover span { display: none; }
-    .btn-change-cover { padding: 0.5rem 0.65rem; }
-    .profile-section-header { flex-direction: column; align-items: stretch; }
-    .profile-tabs-wrap { overflow-x: auto; width: 100%; justify-content: flex-start; }
+
+    /* Profile Mobile Fix */
+    .profile-page-container {
+        padding: 0 0.5rem;
+        margin: 1rem auto 2.5rem;
+        width: 100%;
+        overflow: hidden;
+    }
+    .profile-cover-banner {
+        height: 150px;
+    }
+    .btn-change-cover {
+        bottom: 0.6rem;
+        right: 0.6rem;
+        padding: 0.4rem 0.75rem;
+        font-size: 0.78rem;
+    }
+    .profile-avatar-wrapper {
+        width: 100px;
+        height: 100px;
+    }
+    .profile-main-info {
+        top: -40px;
+        padding: 0 0.75rem 1.25rem;
+        align-items: center;
+        text-align: center;
+    }
+    .profile-full-name {
+        font-size: 1.5rem;
+        word-break: break-word;
+    }
+    .profile-name-bar {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.4rem;
+        width: 100%;
+    }
+    .edit-profile-btn {
+        width: 100%;
+        justify-content: center;
+        margin-left: 0;
+    }
+    .profile-meta-row {
+        flex-direction: column;
+        gap: 0.35rem;
+        width: 100%;
+    }
+    .profile-meta-row .meta-dot {
+        display: none;
+    }
+    .profile-stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+        padding: 0.65rem;
+        width: 100%;
+    }
+    .p-stat-val {
+        font-size: 1.2rem;
+    }
+    .profile-section-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+    .profile-tabs-wrap {
+        width: 100%;
+        overflow-x: auto;
+        justify-content: flex-start;
+        padding: 0.25rem;
+    }
+    .profile-tab-btn {
+        padding: 0.45rem 0.8rem;
+        font-size: 0.8rem;
+        white-space: nowrap;
+    }
+
+    /* Modal Mobile Fix */
+    .modal-backdrop {
+        padding: 0.5rem;
+    }
+    .modal-card-wide {
+        max-height: 92vh;
+        border-radius: var(--radius-lg);
+    }
+    .modal-header-row {
+        padding: 1rem 1.25rem;
+    }
+    .modal-body-scrollable {
+        padding: 1rem 1.25rem;
+        max-height: calc(92vh - 130px);
+    }
+    .modal-actions-right {
+        padding: 0.85rem 1.25rem;
+    }
 }

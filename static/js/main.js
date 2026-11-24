@@ -657,7 +657,7 @@ document.addEventListener('click', (e) => {
     if (deleteModal && e.target === deleteModal) {
         closeDeleteModal();
     }
-    const profileModal = document.getElementById('editProfileModal');
+    const profileModal = document.getElementById('profileEditModal') || document.getElementById('editProfileModal');
     if (profileModal && e.target === profileModal) {
         closeProfileEditModal();
     }
