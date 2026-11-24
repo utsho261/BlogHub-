@@ -20,7 +20,10 @@ def get_db():
     """
     is_mock = False
     try:
-        client = pymongo.MongoClient(MONGO_URI, serverSelectionTimeoutMS=1500)
+        # Atlas cloud connection across regions (e.g. Render Oregon to Atlas Mumbai)
+        # requires sufficient timeout for DNS SRV lookup and TLS handshake (10 seconds)
+        timeout_ms = 10000 if ("mongodb+srv" in MONGO_URI or "@" in MONGO_URI) else 2500
+        client = pymongo.MongoClient(MONGO_URI, serverSelectionTimeoutMS=timeout_ms)
         # Trigger connection check
         client.server_info()
         db = client.get_database("bloghub")
