@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Create a New Story — BlogHub{% endblock %}
+
+{% block content %}
+<div class="editor-container">
+    <div class="editor-header">
+        <div>
+            <h1 class="editor-page-title"><i class="fa-solid fa-pen-nib text-primary"></i> Write a New Story</h1>
+            <p class="editor-page-subtitle">Craft your thoughts with title, category, media and rich formatting</p>
+        </div>
+        <div class="editor-tabs">
+            <button type="button" class="tab-btn active" id="editTabBtn" onclick="switchEditorTab('edit')">
+                <i class="fa-solid fa-code"></i> Write
+            </button>
+            <button type="button" class="tab-btn" id="previewTabBtn" onclick="switchEditorTab('preview')">
+                <i class="fa-solid fa-eye"></i> Live Preview
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Form Section -->
+    <form action="{{ url_for('create_post') }}" method="POST" id="postForm" class="modern-form" novalidate>
+        <div id="editPane">
+            <!-- Title Field -->
+            <div class="form-group {% if errors.title %}has-error{% endif %}">
+                <div class="field-label-row">
+                    <label for="postTitle" class="form-label">Article Title <span class="required">*</span></label>
+                    <span class="char-counter" id="titleCounter">0 / 150</span>
+                </div>
+                <input type="text" id="postTitle" name="title" class="form-control form-control-lg {% if errors.title %}is-invalid{% endif %}" 
+                       placeholder="e.g. Master High-Performance Web Architecture in 2026" 
+                       value="{{ form_data.get('title', '') }}" required minlength="5" maxlength="150">
+                <div class="field-feedback {% if errors.title %}show{% endif %}" id="titleFeedback">
+                    {{ errors.title if errors.title else 'Title must be between 5 and 150 characters.' }}
+                </div>
+            </div>
+
+            <!-- Category & Tags Grid -->
+            <div class="form-row-2">
+                <!-- Category Select -->
+                <div class="form-group {% if errors.category %}has-error{% endif %}">
+                    <label for="postCategory" class="form-label">Category <span class="required">*</span></label>
+                    <select id="postCategory" name="category" class="form-select {% if errors.category %}is-invalid{% endif %}" required>
+                        <option value="">-- Choose Category --</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat }}" {% if form_data.get('category') == cat %}selected{% endif %}>{{ cat }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="field-feedback {% if errors.category %}show{% endif %}" id="categoryFeedback">
+                        {{ errors.category if errors.category else 'Please select an appropriate topic.' }}
+                    </div>
+                </div>
+
+                <!-- Tags Input -->
+                <div class="form-group {% if errors.tags %}has-error{% endif %}">
+                    <div class="field-label-row">
+                        <label for="postTags" class="form-label">Tags <span class="optional">(Optional)</span></label>
+                        <span class="helper-text">Comma separated</span>
+                    </div>
+                    <input type="text" id="postTags" name="tags" class="form-control {% if errors.tags %}is-invalid{% endif %}" 
+                           placeholder="Python, MongoDB, WebDev" 
+                           value="{{ form_data.get('tags', '') }}">
+                    <div class="field-feedback {% if errors.tags %}show{% endif %}" id="tagsFeedback">
+                        {{ errors.tags if errors.tags else 'Up to 8 tags, separated by commas.' }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cover Image URL with Live Preview -->
+            <div class="form-group {% if errors.cover_image %}has-error{% endif %}">
+                <div class="field-label-row">
+                    <label for="postCoverImage" class="form-label">Cover Image URL <span class="optional">(Optional)</span></label>
+                    <span class="helper-text">Direct Unsplash or web image link</span>
+                </div>
+                <div class="image-input-group">
+                    <input type="url" id="postCoverImage" name="cover_image" class="form-control {% if errors.cover_image %}is-invalid{% endif %}" 
+                           placeholder="https://images.unsplash.com/..." 
+                           value="{{ form_data.get('cover_image', '') }}">
+                    <button type="button" class="btn btn-outline btn-sm" id="loadRandomCoverBtn" onclick="setPresetCover()">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Random Cover
+                    </button>
+                </div>
+                <div class="field-feedback {% if errors.cover_image %}show{% endif %}" id="coverFeedback">
+                    {{ errors.cover_image if errors.cover_image else 'Must be a valid HTTP or HTTPS image URL.' }}
+                </div>
+                <div class="image-preview-box" id="imagePreviewBox" style="display: none;">
+                    <img id="imagePreviewImg" src="" alt="Cover preview">
+                    <button type="button" class="remove-preview-btn" onclick="clearCoverPreview()">&times;</button>
+                </div>
+            </div>
+
+            <!-- Summary / Excerpt -->
+            <div class="form-group {% if errors.summary %}has-error{% endif %}">
+                <div class="field-label-row">
+                    <label for="postSummary" class="form-label">Short Summary <span class="optional">(Optional)</span></label>
+                    <span class="char-counter" id="summaryCounter">0 / 300</span>
+                </div>
+                <textarea id="postSummary" name="summary" class="form-control {% if errors.summary %}is-invalid{% endif %}" 
+                          rows="2" placeholder="A concise 1-2 sentence hook for the article card..." maxlength="300">{{ form_data.get('summary', '') }}</textarea>
+                <div class="field-feedback {% if errors.summary %}show{% endif %}" id="summaryFeedback">
+                    {{ errors.summary }}
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="form-group {% if errors.content %}has-error{% endif %}">
+                <div class="field-label-row">
+                    <label for="postContent" class="form-label">Story Content <span class="required">*</span></label>
+                    <div class="content-stats">
+                        <span id="contentWordCount">0 words</span>
+                        <span class="meta-dot">•</span>
+                        <span id="contentReadTime">1 min read</span>
+                    </div>
+                </div>
+                <textarea id="postContent" name="content" class="form-control font-mono {% if errors.content %}is-invalid{% endif %}" 
+                          rows="14" placeholder="Write your full story here...&#10;&#10;Supports headers with #, ##, ###, bullet points with -, and paragraph breaks." 
+                          required minlength="30">{{ form_data.get('content', '') }}</textarea>
+                <div class="field-feedback {% if errors.content %}show{% endif %}" id="contentFeedback">
+                    {{ errors.content if errors.content else 'Content must be at least 30 characters long.' }}
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="editor-actions">
+                <a href="{{ url_for('index') }}" class="btn btn-ghost">Cancel</a>
+                <button type="submit" class="btn btn-primary btn-lg" id="publishBtn">
+                    <i class="fa-solid fa-paper-plane"></i> Publish Story
+                </button>
+            </div>
+        </div>
+
+        <!-- Live Preview Pane -->
+        <div id="previewPane" class="preview-container" style="display: none;">
+            <div class="preview-card">
+                <div class="post-category-badge-large" id="previewCategory">Category</div>
+                <h1 class="post-detail-title" id="previewTitle">Your Title Here</h1>
+                <p class="post-detail-lead" id="previewSummary">Your summary will appear here...</p>
+                
+                <div class="preview-cover-box" id="previewCoverBox" style="display: none;">
+                    <img id="previewCoverImg" src="" alt="Preview cover">
+                </div>
+
+                <div class="post-content-body" id="previewBody">
+                    <p>Start typing in the write tab to preview your formatted content.</p>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

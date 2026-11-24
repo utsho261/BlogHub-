@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}{{ profile_user.name }} (@{{ profile_user.username }}) — BlogHub{% endblock %}
+
+{% block content %}
+<div class="profile-page-container">
+    <!-- Profile Header Card -->
+    <div class="profile-header-card">
+        <div class="profile-banner-accent"></div>
+        <div class="profile-main-info">
+            <div class="profile-avatar-wrapper">
+                <img src="{{ profile_user.avatar if profile_user.avatar else 'https://api.dicebear.com/7.x/initials/svg?seed=' + profile_user.name }}" 
+                     alt="{{ profile_user.name }}" class="profile-page-avatar">
+            </div>
+
+            <div class="profile-texts">
+                <div class="profile-name-bar">
+                    <h1 class="profile-full-name">{{ profile_user.name }}</h1>
+                    <span class="profile-handle">@{{ profile_user.username }}</span>
+                    <span class="profile-role-badge"><i class="fa-solid fa-award"></i> {{ profile_user.role if profile_user.role else 'Author' }}</span>
+                </div>
+
+                <p class="profile-bio-text">
+                    {{ profile_user.bio if profile_user.bio else 'Passionate writer and tech explorer on BlogHub.' }}
+                </p>
+
+                <div class="profile-meta-row">
+                    <span><i class="fa-regular fa-calendar"></i> Member since {{ profile_user.created_at|time_ago }}</span>
+                    <span class="meta-dot">•</span>
+                    <span><i class="fa-regular fa-envelope"></i> {{ profile_user.email }}</span>
+                </div>
+            </div>
+
+            <!-- Stats Column -->
+            <div class="profile-stats-grid">
+                <div class="p-stat-box">
+                    <span class="p-stat-val">{{ posts|length }}</span>
+                    <span class="p-stat-lbl">Articles</span>
+                </div>
+                <div class="p-stat-box">
+                    <span class="p-stat-val">{{ total_views }}</span>
+                    <span class="p-stat-lbl">Total Views</span>
+                </div>
+                <div class="p-stat-box">
+                    <span class="p-stat-val">{{ total_likes }}</span>
+                    <span class="p-stat-lbl">Likes Received</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User's Articles Section -->
+    <div class="profile-articles-section">
+        <div class="section-header">
+            <h2 class="section-title"><i class="fa-solid fa-book-bookmark text-primary"></i> Published Stories ({{ posts|length }})</h2>
+            {% if current_user and current_user.username == profile_user.username %}
+            <a href="{{ url_for('create_post') }}" class="btn btn-primary btn-sm">
+                <i class="fa-solid fa-plus"></i> New Story
+            </a>
+            {% endif %}
+        </div>
+
+        {% if posts %}
+        <div class="posts-grid">
+            {% for post in posts %}
+            <article class="post-card">
+                <div class="post-card-cover-wrapper">
+                    <a href="{{ url_for('post_detail', post_id=post._id) }}">
+                        <img src="{{ post.cover_image }}" alt="{{ post.title }}" class="post-card-img" loading="lazy">
+                    </a>
+                    <span class="post-card-category">{{ post.category }}</span>
+                </div>
+
+                <div class="post-card-content">
+                    <div class="post-card-meta">
+                        <span class="post-date"><i class="fa-regular fa-calendar"></i> {{ post.created_at|time_ago }}</span>
+                        <span class="meta-dot">•</span>
+                        <span><i class="fa-regular fa-clock"></i> {{ post.content|reading_time }}</span>
+                    </div>
+
+                    <h3 class="post-card-title">
+                        <a href="{{ url_for('post_detail', post_id=post._id) }}">{{ post.title }}</a>
+                    </h3>
+
+                    <p class="post-card-summary">{{ post.summary }}</p>
+
+                    <div class="post-card-footer">
+                        <div class="post-metrics">
+                            <span><i class="fa-regular fa-eye"></i> {{ post.views }}</span>
+                            <span><i class="fa-regular fa-heart"></i> {{ post.likes_count }}</span>
+                            <span><i class="fa-regular fa-comment"></i> {{ post.comments_count }}</span>
+                        </div>
+
+                        {% if current_user and current_user.username == profile_user.username %}
+                        <div class="card-author-tools">
+                            <a href="{{ url_for('edit_post', post_id=post._id) }}" class="btn-icon-subtle" title="Edit">
+                                <i class="fa-solid fa-pen"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state-card">
+            <i class="fa-regular fa-newspaper empty-icon"></i>
+            <h3>No articles published yet</h3>
+            <p>{{ profile_user.name }} hasn't published any stories yet.</p>
+            {% if current_user and current_user.username == profile_user.username %}
+            <a href="{{ url_for('create_post') }}" class="btn btn-primary"><i class="fa-solid fa-pen-nib"></i> Write Your First Story</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

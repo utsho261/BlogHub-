@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}BlogHub — Discover Inspiring Stories & Knowledge{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-content">
+        <div class="hero-badge">
+            <span class="badge-dot"></span>
+            <span>Web-Based Modern Blogging Platform</span>
+        </div>
+        <h1 class="hero-title">
+            Where Ideas Ignite and <span class="gradient-text">Stories Take Flight</span>.
+        </h1>
+        <p class="hero-description">
+            Write your thoughts, publish with ease, and explore groundbreaking tech articles, programming insights, and creative stories from writers around the world.
+        </p>
+
+        <div class="hero-actions">
+            {% if current_user %}
+                <a href="{{ url_for('create_post') }}" class="btn btn-primary btn-lg">
+                    <i class="fa-solid fa-pen-nib"></i> Start Writing
+                </a>
+            {% else %}
+                <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">
+                    <i class="fa-solid fa-rocket"></i> Join BlogHub Free
+                </a>
+                <a href="#browseSection" class="btn btn-outline btn-lg">
+                    <i class="fa-solid fa-book-open-reader"></i> Explore Posts
+                </a>
+            {% endif %}
+        </div>
+
+        <!-- Live Platform Stats -->
+        <div class="hero-stats">
+            <div class="stat-item">
+                <span class="stat-number">{{ total_posts }}</span>
+                <span class="stat-label">Published Articles</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-number">{{ total_authors }}</span>
+                <span class="stat-label">Active Authors</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-number">{{ categories|length }}</span>
+                <span class="stat-label">Topics & Niches</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Trending Posts Carousel / Highlight Cards -->
+{% if trending_posts and not search_query and not selected_category %}
+<section class="trending-section">
+    <div class="section-header">
+        <div class="section-title-wrap">
+            <h2 class="section-title"><i class="fa-solid fa-arrow-trend-up text-primary"></i> Trending on BlogHub</h2>
+            <p class="section-subtitle">Most read and engaging stories right now</p>
+        </div>
+    </div>
+
+    <div class="trending-grid">
+        {% for tp in trending_posts %}
+        <article class="trending-card">
+            <div class="trending-rank">0{{ loop.index }}</div>
+            <div class="trending-card-body">
+                <div class="post-meta-line">
+                    <span class="author-tag">
+                        <i class="fa-regular fa-user"></i> {{ tp.author_name }}
+                    </span>
+                    <span class="meta-dot">•</span>
+                    <span class="category-pill-mini">{{ tp.category }}</span>
+                </div>
+                <h3 class="trending-card-title">
+                    <a href="{{ url_for('post_detail', post_id=tp._id) }}">{{ tp.title }}</a>
+                </h3>
+                <div class="trending-card-footer">
+                    <span><i class="fa-regular fa-clock"></i> {{ tp.content|reading_time }}</span>
+                    <span><i class="fa-regular fa-eye"></i> {{ tp.views }} views</span>
+                    <span><i class="fa-regular fa-heart"></i> {{ tp.likes_count }}</span>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Browse & Filter Section -->
+<section class="browse-section" id="browseSection">
+    <div class="section-header with-controls">
+        <div class="section-title-wrap">
+            <h2 class="section-title">
+                {% if search_query %}
+                    Search Results for <span class="highlight-text">"{{ search_query }}"</span>
+                {% elif selected_category %}
+                    Stories in <span class="highlight-text">{{ selected_category }}</span>
+                {% else %}
+                    Latest Articles
+                {% endif %}
+            </h2>
+            <p class="section-subtitle">Showing {{ posts|length }} articles found</p>
+        </div>
+
+        <!-- Category Filter Pills -->
+        <div class="category-scroll-container">
+            <a href="{{ url_for('index') }}" class="cat-chip {% if not selected_category %}active{% endif %}">
+                All Topics
+            </a>
+            {% for cat in categories %}
+            <a href="{{ url_for('index', cat=cat, q=search_query) }}" class="cat-chip {% if selected_category == cat %}active{% endif %}">
+                {{ cat }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Active Search Clears -->
+    {% if search_query or selected_category %}
+    <div class="active-filters-bar">
+        <span>Active Filters:</span>
+        {% if search_query %}
+            <span class="filter-badge">Keyword: "{{ search_query }}" <a href="{{ url_for('index', cat=selected_category) }}">&times;</a></span>
+        {% endif %}
+        {% if selected_category %}
+            <span class="filter-badge">Category: {{ selected_category }} <a href="{{ url_for('index', q=search_query) }}">&times;</a></span>
+        {% endif %}
+        <a href="{{ url_for('index') }}" class="clear-all-link">Clear all</a>
+    </div>
+    {% endif %}
+
+    <!-- Posts Grid -->
+    {% if posts %}
+    <div class="posts-grid">
+        {% for post in posts %}
+        <article class="post-card">
+            <div class="post-card-cover-wrapper">
+                <a href="{{ url_for('post_detail', post_id=post._id) }}">
+                    <img src="{{ post.cover_image }}" alt="{{ post.title }}" class="post-card-img" loading="lazy">
+                </a>
+                <span class="post-card-category">{{ post.category }}</span>
+            </div>
+
+            <div class="post-card-content">
+                <div class="post-card-meta">
+                    <a href="{{ url_for('profile', username=post.author_username) }}" class="author-info">
+                        <i class="fa-regular fa-circle-user"></i>
+                        <span>{{ post.author_name }}</span>
+                    </a>
+                    <span class="meta-dot">•</span>
+                    <span class="post-date"><i class="fa-regular fa-calendar"></i> {{ post.created_at|time_ago }}</span>
+                </div>
+
+                <h3 class="post-card-title">
+                    <a href="{{ url_for('post_detail', post_id=post._id) }}">{{ post.title }}</a>
+                </h3>
+
+                <p class="post-card-summary">
+                    {{ post.summary }}
+                </p>
+
+                <!-- Tags list -->
+                {% if post.tags %}
+                <div class="post-tags-container">
+                    {% for tag in post.tags[:3] %}
+                    <span class="tag-pill">#{{ tag }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="post-card-footer">
+                    <div class="post-metrics">
+                        <span title="Reading time"><i class="fa-regular fa-clock"></i> {{ post.content|reading_time }}</span>
+                        <span title="Total views"><i class="fa-regular fa-eye"></i> {{ post.views }}</span>
+                        <span title="Likes"><i class="fa-regular fa-heart"></i> {{ post.likes_count }}</span>
+                        <span title="Comments"><i class="fa-regular fa-comment"></i> {{ post.comments_count }}</span>
+                    </div>
+
+                    <a href="{{ url_for('post_detail', post_id=post._id) }}" class="read-more-btn">
+                        Read Story <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state-card">
+        <div class="empty-icon"><i class="fa-solid fa-folder-open"></i></div>
+        <h3>No articles found</h3>
+        <p>No stories matched your current search or category filter. Try clearing filters or be the first to write one!</p>
+        <div class="empty-actions">
+            <a href="{{ url_for('index') }}" class="btn btn-outline">Show All Stories</a>
+            {% if current_user %}
+                <a href="{{ url_for('create_post') }}" class="btn btn-primary"><i class="fa-solid fa-pen-nib"></i> Write a Story</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

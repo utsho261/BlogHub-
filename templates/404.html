@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Page Not Found — BlogHub{% endblock %}
+
+{% block content %}
+<div class="error-page-container">
+    <div class="error-card">
+        <div class="error-code-badge">404</div>
+        <h1 class="error-title">Story or Page Not Found</h1>
+        <p class="error-description">
+            {{ message if message else "The page you are looking for might have been moved, deleted, or does not exist." }}
+        </p>
+        <div class="error-actions">
+            <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">
+                <i class="fa-solid fa-house"></i> Return to Homepage
+            </a>
+            <a href="{{ url_for('index') }}#browseSection" class="btn btn-outline btn-lg">
+                <i class="fa-solid fa-compass"></i> Explore Articles
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

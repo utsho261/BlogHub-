@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Create Account — BlogHub{% endblock %}
+
+{% block content %}
+<div class="auth-page-container">
+    <div class="auth-card register-card-wide">
+        <!-- Brand / Header -->
+        <div class="auth-header">
+            <div class="auth-logo-badge">
+                <i class="fa-solid fa-user-plus"></i>
+            </div>
+            <h1 class="auth-title">Join the BlogHub Community</h1>
+            <p class="auth-subtitle">Create your free author account with instant publishing capabilities.</p>
+        </div>
+
+        <!-- Registration Form with Real-Time Multi-Rule Validation -->
+        <form action="{{ url_for('register') }}" method="POST" id="registerForm" class="modern-form" novalidate>
+            
+            <div class="form-row-2">
+                <!-- Full Name -->
+                <div class="form-group {% if errors.name %}has-error{% endif %}">
+                    <label for="regName" class="form-label">Full Name <span class="required">*</span></label>
+                    <div class="input-icon-wrapper">
+                        <i class="fa-regular fa-id-badge input-leading-icon"></i>
+                        <input type="text" id="regName" name="name" 
+                               class="form-control {% if errors.name %}is-invalid{% endif %}" 
+                               placeholder="e.g. Utsho Roy" 
+                               value="{{ form_data.get('name', '') }}" required minlength="2" maxlength="60">
+                    </div>
+                    <div class="field-feedback {% if errors.name %}show{% endif %}" id="nameFeedback">
+                        {{ errors.name if errors.name else 'Between 2 and 60 characters, letters only.' }}
+                    </div>
+                </div>
+
+                <!-- Username with Live AJAX Uniqueness Check -->
+                <div class="form-group {% if errors.username %}has-error{% endif %}">
+                    <div class="field-label-row">
+                        <label for="regUsername" class="form-label">Username <span class="required">*</span></label>
+                        <span class="live-status-pill" id="usernameStatus"></span>
+                    </div>
+                    <div class="input-icon-wrapper">
+                        <i class="fa-solid fa-at input-leading-icon"></i>
+                        <input type="text" id="regUsername" name="username" 
+                               class="form-control {% if errors.username %}is-invalid{% endif %}" 
+                               placeholder="e.g. utsho_roy" 
+                               value="{{ form_data.get('username', '') }}" required minlength="3" maxlength="25">
+                    </div>
+                    <div class="field-feedback {% if errors.username %}show{% endif %}" id="usernameFeedback">
+                        {{ errors.username if errors.username else '3-25 chars: lowercase letters, numbers, and underscore.' }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Email with Live AJAX Uniqueness Check -->
+            <div class="form-group {% if errors.email %}has-error{% endif %}">
+                <div class="field-label-row">
+                    <label for="regEmail" class="form-label">Email Address <span class="required">*</span></label>
+                    <span class="live-status-pill" id="emailStatus"></span>
+                </div>
+                <div class="input-icon-wrapper">
+                    <i class="fa-regular fa-envelope input-leading-icon"></i>
+                    <input type="email" id="regEmail" name="email" 
+                           class="form-control {% if errors.email %}is-invalid{% endif %}" 
+                           placeholder="user@example.com" 
+                           value="{{ form_data.get('email', '') }}" required>
+                </div>
+                <div class="field-feedback {% if errors.email %}show{% endif %}" id="emailFeedback">
+                    {{ errors.email if errors.email else 'Valid email address required.' }}
+                </div>
+            </div>
+
+            <!-- Password with Dynamic Strength Meter -->
+            <div class="form-row-2">
+                <div class="form-group {% if errors.password %}has-error{% endif %}">
+                    <label for="regPassword" class="form-label">Password <span class="required">*</span></label>
+                    <div class="input-icon-wrapper">
+                        <i class="fa-solid fa-lock input-leading-icon"></i>
+                        <input type="password" id="regPassword" name="password" 
+                               class="form-control {% if errors.password %}is-invalid{% endif %}" 
+                               placeholder="Min 8 chars, 1 upper, 1 special..." required>
+                        <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('regPassword', this)">
+                            <i class="fa-regular fa-eye"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Dynamic Strength Meter Bar -->
+                    <div class="password-strength-container">
+                        <div class="strength-track">
+                            <div class="strength-bar" id="strengthBar"></div>
+                        </div>
+                        <span class="strength-label" id="strengthLabel">Enter password</span>
+                    </div>
+
+                    <div class="field-feedback {% if errors.password %}show{% endif %}" id="passwordFeedback">
+                        {{ errors.password if errors.password else 'At least 8 characters with upper, lower, number, and special character.' }}
+                    </div>
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="form-group {% if errors.confirm_password %}has-error{% endif %}">
+                    <label for="regConfirmPassword" class="form-label">Confirm Password <span class="required">*</span></label>
+                    <div class="input-icon-wrapper">
+                        <i class="fa-solid fa-shield-halved input-leading-icon"></i>
+                        <input type="password" id="regConfirmPassword" name="confirm_password" 
+                               class="form-control {% if errors.confirm_password %}is-invalid{% endif %}" 
+                               placeholder="Re-enter your password" required>
+                        <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('regConfirmPassword', this)">
+                            <i class="fa-regular fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="field-feedback {% if errors.confirm_password %}show{% endif %}" id="confirmFeedback">
+                        {{ errors.confirm_password if errors.confirm_password else 'Passwords must match exactly.' }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Password Requirements Checklist -->
+            <div class="pwd-checklist" id="pwdChecklist">
+                <div class="check-item" id="checkLen"><i class="fa-regular fa-circle"></i> At least 8 characters</div>
+                <div class="check-item" id="checkUpper"><i class="fa-regular fa-circle"></i> One uppercase letter (A-Z)</div>
+                <div class="check-item" id="checkLower"><i class="fa-regular fa-circle"></i> One lowercase letter (a-z)</div>
+                <div class="check-item" id="checkNum"><i class="fa-regular fa-circle"></i> One number (0-9)</div>
+                <div class="check-item" id="checkSpec"><i class="fa-regular fa-circle"></i> One special character (!@#$%)</div>
+            </div>
+
+            <!-- Short Bio / Intro -->
+            <div class="form-group {% if errors.bio %}has-error{% endif %}">
+                <div class="field-label-row">
+                    <label for="regBio" class="form-label">Short Bio <span class="optional">(Optional)</span></label>
+                    <span class="char-counter" id="bioCounter">0 / 300</span>
+                </div>
+                <textarea id="regBio" name="bio" class="form-control" rows="2" 
+                          placeholder="Tell readers a bit about your interests, passions or tech stack..." maxlength="300">{{ form_data.get('bio', '') }}</textarea>
+                <div class="field-feedback" id="bioFeedback">{{ errors.bio }}</div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="form-actions-full">
+                <button type="submit" class="btn btn-primary btn-block btn-lg" id="regSubmitBtn">
+                    <i class="fa-solid fa-rocket"></i> Create BlogHub Account
+                </button>
+            </div>
+        </form>
+
+        <div class="auth-footer-prompt">
+            <span>Already have an account?</span>
+            <a href="{{ url_for('login') }}" class="auth-link">Sign In</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

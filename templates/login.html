@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In — BlogHub{% endblock %}
+
+{% block content %}
+<div class="auth-page-container">
+    <div class="auth-card">
+        <!-- Brand / Header -->
+        <div class="auth-header">
+            <div class="auth-logo-badge">
+                <i class="fa-solid fa-feather-pointed"></i>
+            </div>
+            <h1 class="auth-title">Welcome Back</h1>
+            <p class="auth-subtitle">Sign in to your BlogHub account to write, manage and connect.</p>
+        </div>
+
+        {% if errors.auth %}
+        <div class="alert-box alert-danger">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span>{{ errors.auth }}</span>
+        </div>
+        {% endif %}
+
+        <!-- Login Form with Client Validation -->
+        <form action="{{ url_for('login') }}" method="POST" id="loginForm" class="modern-form" novalidate>
+            <input type="hidden" name="next" value="{{ next }}">
+
+            <!-- Identifier (Username or Email) -->
+            <div class="form-group {% if errors.identifier %}has-error{% endif %}">
+                <label for="loginIdentifier" class="form-label">Username or Email Address</label>
+                <div class="input-icon-wrapper">
+                    <i class="fa-regular fa-envelope input-leading-icon"></i>
+                    <input type="text" id="loginIdentifier" name="identifier" 
+                           class="form-control {% if errors.identifier %}is-invalid{% endif %}" 
+                           placeholder="e.g. utsho_roy or user@example.com" 
+                           value="{{ form_data.get('identifier', '') }}" required autocomplete="username">
+                </div>
+                <div class="field-feedback {% if errors.identifier %}show{% endif %}" id="identifierFeedback">
+                    {{ errors.identifier if errors.identifier else 'Please enter your username or registered email.' }}
+                </div>
+            </div>
+
+            <!-- Password -->
+            <div class="form-group {% if errors.password %}has-error{% endif %}">
+                <div class="field-label-row">
+                    <label for="loginPassword" class="form-label">Password</label>
+                </div>
+                <div class="input-icon-wrapper">
+                    <i class="fa-solid fa-lock input-leading-icon"></i>
+                    <input type="password" id="loginPassword" name="password" 
+                           class="form-control {% if errors.password %}is-invalid{% endif %}" 
+                           placeholder="Enter your secret password" required autocomplete="current-password">
+                    <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('loginPassword', this)">
+                        <i class="fa-regular fa-eye"></i>
+                    </button>
+                </div>
+                <div class="field-feedback {% if errors.password %}show{% endif %}" id="passwordFeedback">
+                    {{ errors.password if errors.password else 'Password is required.' }}
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="form-actions-full">
+                <button type="submit" class="btn btn-primary btn-block btn-lg" id="loginSubmitBtn">
+                    <i class="fa-solid fa-right-to-bracket"></i> Sign In to Account
+                </button>
+            </div>
+        </form>
+
+        <div class="auth-footer-prompt">
+            <span>Don't have an account yet?</span>
+            <a href="{{ url_for('register') }}" class="auth-link">Create an account</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

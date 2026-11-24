@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}BlogHub — Write • Share • Explore{% endblock %}</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Main Modern CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Phosphor Icons (Lightweight, Modern Feather/Phosphor style) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="dark-theme">
+
+    <!-- Top Announcement / Status Bar -->
+    {% if is_mock_db %}
+    <div class="db-status-banner">
+        <span><i class="fa-solid fa-circle-info"></i> Running in <strong>In-Memory Mode (mongomock)</strong>. To persist to live MongoDB, set <code>MONGO_URI</code> in <code>.env</code>.</span>
+    </div>
+    {% endif %}
+
+    <!-- Navigation Header -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('index') }}" class="brand-logo">
+                <span class="logo-icon"><i class="fa-solid fa-feather-pointed"></i></span>
+                <span class="brand-name">Blog<span class="highlight">Hub</span></span>
+            </a>
+
+            <!-- Search Bar in Header -->
+            <form action="{{ url_for('index') }}" method="GET" class="nav-search-form">
+                <div class="search-input-wrapper">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" name="q" placeholder="Search stories, topics, authors..." value="{{ request.args.get('q', '') }}" autocomplete="off">
+                </div>
+            </form>
+
+            <!-- Nav Actions -->
+            <nav class="nav-actions">
+                <a href="{{ url_for('index') }}" class="nav-link"><i class="fa-solid fa-compass"></i> Explore</a>
+                
+                {% if current_user %}
+                    <a href="{{ url_for('create_post') }}" class="btn btn-primary btn-sm">
+                        <i class="fa-solid fa-pen-nib"></i> Write
+                    </a>
+                    
+                    <div class="user-menu-dropdown">
+                        <button class="user-avatar-btn" id="userMenuBtn" aria-expanded="false">
+                            <img src="{{ current_user.avatar }}" alt="{{ current_user.name }}" class="nav-avatar">
+                            <span class="nav-user-name">{{ current_user.name.split()[0] }}</span>
+                            <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
+                        </button>
+                        <div class="dropdown-panel" id="userDropdownPanel">
+                            <div class="dropdown-header">
+                                <div class="dropdown-user-name">{{ current_user.name }}</div>
+                                <div class="dropdown-user-handle">@{{ current_user.username }}</div>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <a href="{{ url_for('profile', username=current_user.username) }}" class="dropdown-item">
+                                <i class="fa-regular fa-user"></i> My Profile & Stories
+                            </a>
+                            <a href="{{ url_for('create_post') }}" class="dropdown-item">
+                                <i class="fa-solid fa-plus"></i> New Story
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="{{ url_for('logout') }}" class="dropdown-item text-danger">
+                                <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out
+                            </a>
+                        </div>
+                    </div>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-ghost btn-sm">Sign In</a>
+                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm">Get Started</a>
+                {% endif %}
+
+                <!-- Mobile Menu Toggle Button -->
+                <button class="mobile-toggle-btn" id="mobileMenuToggle" aria-label="Toggle navigation">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Flash Toast Notifications -->
+    <div class="toast-container" id="toastContainer">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="toast-card toast-{{ category }}">
+                        <div class="toast-icon">
+                            {% if category == 'success' %}
+                                <i class="fa-solid fa-circle-check"></i>
+                            {% elif category == 'danger' %}
+                                <i class="fa-solid fa-circle-exclamation"></i>
+                            {% elif category == 'warning' %}
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                            {% else %}
+                                <i class="fa-solid fa-circle-info"></i>
+                            {% endif %}
+                        </div>
+                        <div class="toast-message">{{ message }}</div>
+                        <button class="toast-close-btn" onclick="this.parentElement.remove()">&times;</button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Dynamic Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-brand-section">
+                <div class="footer-brand">
+                    <span class="logo-icon"><i class="fa-solid fa-feather-pointed"></i></span>
+                    <span class="brand-name">Blog<span class="highlight">Hub</span></span>
+                </div>
+                <p class="footer-tagline">Write • Share • Explore — A modern blogging ecosystem built with Python, MongoDB, HTML5, and CSS3.</p>
+                <div class="academic-badge">
+                    <span><i class="fa-solid fa-graduation-cap"></i> CSE-458: Web Database Programming</span>
+                    <span>Bangladesh University of Business & Technology (BUBT)</span>
+                </div>
+            </div>
+
+            <div class="footer-links-group">
+                <h4 class="footer-heading">Project Team (Group)</h4>
+                <ul class="team-list">
+                    <li><i class="fa-solid fa-user-check"></i> Mst. Sumaiya Akter (22235103059)</li>
+                    <li><i class="fa-solid fa-user-check"></i> Utsho Roy (22235103261)</li>
+                    <li><i class="fa-solid fa-user-check"></i> Afrin Akter Achol (22235103358)</li>
+                    <li><i class="fa-solid fa-user-check"></i> MD. Arifur Rahaman (21225103159)</li>
+                </ul>
+            </div>
+
+            <div class="footer-links-group">
+                <h4 class="footer-heading">Technologies</h4>
+                <div class="tech-pills">
+                    <span class="tech-pill"><i class="fa-brands fa-python"></i> Python (Flask)</span>
+                    <span class="tech-pill"><i class="fa-solid fa-database"></i> MongoDB</span>
+                    <span class="tech-pill"><i class="fa-brands fa-html5"></i> HTML5</span>
+                    <span class="tech-pill"><i class="fa-brands fa-css3-alt"></i> Modern CSS</span>
+                    <span class="tech-pill"><i class="fa-brands fa-js"></i> Real-time JS Validation</span>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="copyright">
+                &copy; {{ current_year }} BlogHub. All rights reserved. B.Sc. in CSE, BUBT.
+            </div>
+            <div class="footer-meta">
+                <span>Built with full Client & Server Side Validation</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Main Interactive JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
